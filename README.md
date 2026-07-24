@@ -8,7 +8,9 @@ regret. The sibling repo `hetero_lvgp` (at `/data/zhq7531/IDEAL/hetero_lvgp`, be
 `benchmark/`) covers the Bayesian-optimization side; this repo isolates the question that study
 kept pointing back to — *which model actually models this class of data best, and why*.
 
-**Scope:** two test problems; four surrogate models — two python GPs and the two **MATLAB LVGP engines (models of record)** — scored on ground-truth-based metrics.
+**Scope:** three test problems (`branin_hetero`, `sixhump_camel` — both 1-D — and `rastrigin_6d`);
+four surrogate models — two python GPs and the two **MATLAB LVGP engines (models of record)** —
+scored on ground-truth-based metrics (per-level MAE / RRMSE / 90% interval score / coverage).
 
 ---
 
@@ -150,12 +152,19 @@ lvgp_modeling_study/
 │   ├── problems.py            <- 10 test problems w/ analytic f_true & sigma (2 used here)
 │   ├── doe.py                 <- SLHD design generators
 │   ├── doe_cache.py           <- deterministic cached designs w/ replicates
+│   ├── metrics.py             <- per-level MAE / RRMSE / 90% interval score / coverage tables
+│   ├── study.py               <- fit+predict driver w/ prediction cache (results/pred_cache/)
 │   └── models/                <- the surrogate models (see table above)
 ├── matlab/                    <- the lab's LVGP code (standard_lvgp/, heter_lvgp/) + the
 │                                 mfit.m / mpredict.m bridge + standalone aleatoric poly fns
-├── notebooks/modeling.ipynb   <- starter: fit all 4 models, metrics vs ground truth
+│                                 (postdoc's code — do not modify; bridge glue lives in new files)
+├── notebooks/
+│   ├── modeling.ipynb                    <- starter: fit all 4 models, metrics vs ground truth
+│   └── surrogate_comparison_study.ipynb  <- THE study notebook: DOE -> 3 problems -> 4 models ->
+│                                            per-level metric tables -> plots -> conclusions
 ├── notes/                     <- personal working notes (gitignored)
 ├── results/                   <- experiment outputs (gitignored; regenerable)
+│   └── precompute.py          <- batch driver filling the prediction cache (seeds 1-3)
 └── plots/                     <- figures (gitignored; regenerable)
 ```
 

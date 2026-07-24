@@ -1,0 +1,46 @@
+\documentclass[11pt]{article}
+\usepackage[margin=0.7in,landscape]{geometry}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{amsmath}
+\title{Surrogate-model comparison --- heteroscedastic mixed-variable test problems\\
+\large Separate GPs / Categorical GP / Standard LVGP (MATLAB) / H-LVGP (MATLAB)}
+\author{}
+\date{}
+\begin{document}
+\maketitle
+\noindent\textbf{Legend.} Metrics on a ground-truth test set (200-pt grid per level for 1-D;
+1024 Sobol points per level for Rastrigin 6-D): MAE and RRMSE (surface accuracy), 90\%
+Gneiting--Raftery interval score IS (accuracy $+$ calibration), and 90\% coverage (target
+$0.90$; higher is \emph{not} better). \colorbox{green!20}{\textbf{Bold on green}} = best model
+in the comparison group (winners are recomputed within each version's model set). Budgets $n$
+are TOTAL design points; designs are SLHD with $n_{\mathrm{rep}}$ replicates per point.
+Single seed.
+\vspace{1em}
+\section*{Version 1 --- all four models}
+\input{summary.tex}
+\clearpage
+\input{branin_hetero_nrep10.tex}
+\input{branin_hetero_nrep03.tex}
+\clearpage
+\input{sixhump_camel_nrep10.tex}
+\input{sixhump_camel_nrep03.tex}
+\clearpage
+\input{rastrigin_6d_nrep10.tex}
+\input{rastrigin_6d_nrep03.tex}
+\clearpage
+\clearpage
+\section*{Version 2 --- without the Categorical GP}
+\input{summary_nocat.tex}
+\clearpage
+\input{branin_hetero_nrep10_nocat.tex}
+\input{branin_hetero_nrep03_nocat.tex}
+\clearpage
+\input{sixhump_camel_nrep10_nocat.tex}
+\input{sixhump_camel_nrep03_nocat.tex}
+\clearpage
+\input{rastrigin_6d_nrep10_nocat.tex}
+\input{rastrigin_6d_nrep03_nocat.tex}
+\clearpage
+\end{document}

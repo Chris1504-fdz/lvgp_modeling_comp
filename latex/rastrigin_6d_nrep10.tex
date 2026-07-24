@@ -1,0 +1,27 @@
+\begin{table}[htbp]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\setlength{\fboxsep}{1pt}
+\caption{Rastrigin 6-D --- per-level metrics, $n_{\mathrm{rep}}=10$ (seed 1; MAE/RRMSE/IS lower is better, coverage target $0.90$). Bold = best model in the row; the green highlight marks the winners of the \emph{Mean} row.}
+\label{tab:rastrigin_6d_nrep10}
+\begin{tabular}{llrrrrrrrrrrrrrrrr}
+\toprule
+ & & \multicolumn{4}{c}{\textbf{Separate GPs}} & \multicolumn{4}{c}{\textbf{Categorical GP}} & \multicolumn{4}{c}{\textbf{Standard LVGP}} & \multicolumn{4}{c}{\textbf{H-LVGP}} \\
+\cmidrule(lr){3-6} \cmidrule(lr){7-10} \cmidrule(lr){11-14} \cmidrule(lr){15-18}
+$n$ & Level & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.9$ & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.9$ & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.9$ & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.9$ \\
+\midrule
+\multirow{5}{*}{20} & level 1 & $29.04$ & $1.228$ & {\boldmath$163.9$} & {\boldmath$0.7129$} & {\boldmath$25.17$} & {\boldmath$1.070$} & $183.4$ & $0.5957$ & $36.64$ & $1.534$ & $448.4$ & $0.3018$ & $36.62$ & $1.533$ & $446.6$ & $0.3027$ \\
+ & level 2 & $22.94$ & $0.8990$ & {\boldmath$124.5$} & {\boldmath$0.8193$} & $24.53$ & $0.9679$ & $175.6$ & $0.6279$ & {\boldmath$21.40$} & {\boldmath$0.8397$} & $279.8$ & $0.2754$ & $21.40$ & $0.8400$ & $271.1$ & $0.3018$ \\
+ & level 3 & {\boldmath$24.95$} & {\boldmath$1.012$} & $250.3$ & $0.4287$ & $28.64$ & $1.163$ & {\boldmath$223.6$} & {\boldmath$0.5215$} & $36.07$ & $1.444$ & $579.4$ & $0.1328$ & $36.03$ & $1.442$ & $568.2$ & $0.1445$ \\
+ & level 4 & {\boldmath$23.41$} & {\boldmath$1.031$} & {\boldmath$136.5$} & {\boldmath$0.7881$} & $27.65$ & $1.206$ & $231.5$ & $0.5391$ & $25.91$ & $1.116$ & $348.9$ & $0.2607$ & $25.60$ & $1.103$ & $326.3$ & $0.2842$ \\
+ & \textit{Mean} & \colorbox{green!20}{\boldmath$25.08$} & \colorbox{green!20}{\boldmath$1.043$} & \colorbox{green!20}{\boldmath$168.8$} & \colorbox{green!20}{\boldmath$0.6873$} & $26.50$ & $1.102$ & $203.5$ & $0.5710$ & $30.01$ & $1.233$ & $414.1$ & $0.2427$ & $29.91$ & $1.229$ & $403.1$ & $0.2583$ \\
+\midrule
+\multirow{5}{*}{32} & level 1 & $24.39$ & $1.048$ & $138.3$ & $0.8105$ & {\boldmath$21.56$} & {\boldmath$0.9047$} & {\boldmath$106.8$} & {\boldmath$0.8975$} & $25.82$ & $1.110$ & $241.5$ & $0.5166$ & $25.78$ & $1.109$ & $239.8$ & $0.5205$ \\
+ & level 2 & {\boldmath$22.64$} & {\boldmath$0.8884$} & $119.9$ & $0.8008$ & $23.23$ & $0.9220$ & {\boldmath$117.5$} & {\boldmath$0.8730$} & $27.73$ & $1.099$ & $257.9$ & $0.4932$ & $27.70$ & $1.098$ & $252.7$ & $0.5049$ \\
+ & level 3 & $24.75$ & $1.004$ & $139.1$ & $0.7900$ & {\boldmath$22.41$} & {\boldmath$0.9005$} & {\boldmath$112.2$} & {\boldmath$0.8828$} & $27.33$ & $1.126$ & $255.2$ & $0.5312$ & $27.30$ & $1.124$ & $252.5$ & $0.5352$ \\
+ & level 4 & {\boldmath$20.97$} & {\boldmath$0.8812$} & {\boldmath$104.8$} & {\boldmath$0.9209$} & $24.38$ & $1.035$ & $122.2$ & $0.8389$ & $28.51$ & $1.200$ & $265.6$ & $0.4990$ & $28.28$ & $1.190$ & $252.4$ & $0.5215$ \\
+ & \textit{Mean} & $23.18$ & $0.9554$ & $125.5$ & $0.8306$ & \colorbox{green!20}{\boldmath$22.90$} & \colorbox{green!20}{\boldmath$0.9405$} & \colorbox{green!20}{\boldmath$114.7$} & \colorbox{green!20}{\boldmath$0.8730$} & $27.35$ & $1.134$ & $255.1$ & $0.5100$ & $27.27$ & $1.130$ & $249.4$ & $0.5205$ \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -16,6 +16,9 @@ import subprocess
 import tempfile
 import shutil
 import atexit
+import fcntl
+import time
+import random
 import numpy as np
 import scipy.io
 
@@ -28,20 +31,60 @@ MATLAB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.pat
 FIT_TIMEOUT_S = 3600
 PRED_TIMEOUT_S = 900
 
+# ---- MATLAB launch throttle + license retry (pattern from hetero_lvgp/benchmark/run.py) ----
+# A burst of simultaneous MATLAB launches wedges the MathWorks Service Host / license checkout
+# (error -5001), especially with the parent repo's sweep holding seats on this node. Space
+# launches >= LAUNCH_GAP_S apart ACROSS ALL PROCESSES (flock'd stamp file, so parallel workers
+# and even concurrent drivers coordinate), and retry with backoff when the log shows a license
+# checkout failure.
+LAUNCH_GAP_S = float(os.environ.get("MLVGP_LAUNCH_GAP_S", "8"))
+_STAMP = os.path.join(tempfile.gettempdir(), f"mlvgp_launch_{os.getuid()}.stamp")
+_N_RETRY = 6
+
+
+def _throttle():
+    """Block until >= LAUNCH_GAP_S since the last MATLAB launch by ANY of our processes."""
+    with open(_STAMP, "a+") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)          # held while we wait -> waiters queue FIFO-ish
+        try:
+            fh.seek(0)
+            try:
+                last = float(fh.read().strip() or 0.0)
+            except ValueError:
+                last = 0.0
+            wait = last + LAUNCH_GAP_S - time.time()
+            if wait > 0:
+                time.sleep(wait)
+            fh.seek(0); fh.truncate(); fh.write(repr(time.time())); fh.flush()
+        finally:
+            fcntl.flock(fh, fcntl.LOCK_UN)
+
 
 def _run_matlab(call, timeout):
     env = dict(os.environ)
     env["DISPLAY"] = os.environ.get("BENCH_DISPLAY", "")
     env["LD_LIBRARY_PATH"] = XVFB_LIBDIR + ":" + env.get("LD_LIBRARY_PATH", "")
-    pref = tempfile.mkdtemp(prefix="mlpref_"); tmp = tempfile.mkdtemp(prefix="mltmp_")
-    env["MATLAB_PREFDIR"] = pref; env["TMPDIR"] = tmp
-    try:
-        r = subprocess.run([MATLAB, "-nodisplay", "-singleCompThread", "-batch", call],
-                           cwd=MATLAB_DIR, env=env, capture_output=True, text=True, timeout=timeout)
-        if r.returncode != 0:
-            raise RuntimeError(f"MATLAB failed (rc={r.returncode}):\n{r.stdout[-2000:]}\n{r.stderr[-500:]}")
-    finally:
-        shutil.rmtree(pref, ignore_errors=True); shutil.rmtree(tmp, ignore_errors=True)
+    last_err = ""
+    for attempt in range(_N_RETRY):
+        pref = tempfile.mkdtemp(prefix="mlpref_"); tmp = tempfile.mkdtemp(prefix="mltmp_")
+        env["MATLAB_PREFDIR"] = pref; env["TMPDIR"] = tmp
+        _throttle()
+        try:
+            r = subprocess.run([MATLAB, "-nodisplay", "-singleCompThread", "-batch", call],
+                               cwd=MATLAB_DIR, env=env, capture_output=True, text=True,
+                               timeout=timeout)
+            if r.returncode == 0:
+                return
+            last_err = f"rc={r.returncode}:\n{r.stdout[-2000:]}\n{r.stderr[-500:]}"
+            licensed_out = "5001" in (r.stdout + r.stderr) or "icense" in (r.stdout + r.stderr)
+        except subprocess.TimeoutExpired:
+            last_err, licensed_out = f"timeout after {timeout}s", True   # hung checkout counts
+        finally:
+            shutil.rmtree(pref, ignore_errors=True); shutil.rmtree(tmp, ignore_errors=True)
+        if not licensed_out:                     # real MATLAB error -> no point retrying
+            break
+        time.sleep(20 + 10 * attempt + random.uniform(0, 8))
+    raise RuntimeError(f"MATLAB failed after retries ({call.split('(')[0]}): {last_err}")
 
 
 class _MatlabLVGPBase(BaseModel):
