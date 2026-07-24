@@ -3,7 +3,6 @@ notes/
 
 # --- regenerable artifacts ---
 doe_cache/
-results/
 plots/
 utils/models/__pycache__/
 __pycache__/
