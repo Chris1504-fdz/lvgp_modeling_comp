@@ -29,7 +29,7 @@ ARROWS = {"MAE": r"MAE~$\downarrow$", "RRMSE": r"RRMSE~$\downarrow$",
           "IS": r"IS~$\downarrow$", "Coverage": r"Cov.~$\to.9$"}
 PROBLEMS = [("branin_hetero", "Branin", [(None, 10), (25, 25), (40, 40)]),
             ("sixhump_camel", "Six-hump camel", [(None, 8), (20, 20), (32, 32)]),
-            ("rastrigin_6d", "Rastrigin 6-D", [(20, 20), (None, 32)])]
+            ("rastrigin_6d", "Rastrigin 6-D", [(80, 80), (160, 160)])]
 SEED, N_REPS = 1, [10, 3]
 
 _cache = {}

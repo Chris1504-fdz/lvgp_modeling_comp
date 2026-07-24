@@ -27,7 +27,7 @@ SETS = [("metric_tables.xlsx", ["separate_gp", "categorical_kernel", "standard_L
 METRICS = ["MAE", "RRMSE", "IS", "Coverage"]
 PROBLEMS = [("branin_hetero", "Branin", [(None, 10), (25, 25), (40, 40)], "branin"),
             ("sixhump_camel", "Six-hump camel", [(None, 8), (20, 20), (32, 32)], "camel"),
-            ("rastrigin_6d", "Rastrigin 6-D", [(20, 20), (None, 32)], "rastrigin")]
+            ("rastrigin_6d", "Rastrigin 6-D", [(80, 80), (160, 160)], "rastrigin")]
 SEED, N_REPS = 1, [10, 3]
 
 BOLD_GREEN = Font(bold=True, color="1F6B3B")

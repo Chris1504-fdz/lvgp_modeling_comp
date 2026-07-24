@@ -18,7 +18,8 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 
 CONFIGS = [("branin_hetero", None), ("branin_hetero", 25), ("branin_hetero", 40),
            ("sixhump_camel", None), ("sixhump_camel", 20), ("sixhump_camel", 32),
-           ("rastrigin_6d", None), ("rastrigin_6d", 20)]
+           ("rastrigin_6d", None), ("rastrigin_6d", 20),
+           ("rastrigin_6d", 80), ("rastrigin_6d", 160)]
 MODELS = ["separate_gp", "categorical_kernel", "standard_LVGP", "heter_LVGP"]
 N_REPS = [3, 10]
 SEED = 1
