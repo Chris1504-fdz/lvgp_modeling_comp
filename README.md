@@ -8,7 +8,7 @@ regret. The sibling repo `hetero_lvgp` (at `/data/zhq7531/IDEAL/hetero_lvgp`, be
 `benchmark/`) covers the Bayesian-optimization side; this repo isolates the question that study
 kept pointing back to — *which model actually models this class of data best, and why*.
 
-**Scope:** two test problems, four python surrogate models, ground-truth-based metrics.
+**Scope:** two test problems; four surrogate models — two python GPs and the two **MATLAB LVGP engines (models of record)** — scored on ground-truth-based metrics.
 
 ---
 
@@ -49,20 +49,27 @@ hard-won implementation facts — do not regress them:
 2. **The aleatoric r(x) is the pooled [x, z] polynomial, not a per-level polynomial** — the
    per-level version inflates r ~4× on under-sampled levels.
 
-### The four models compared here (all pure python, same `fit/predict` interface)
+### The four models compared here (same `fit/predict` interface)
 
-| registry key | file | idea | noise treatment |
+**The LVGP models of record are the MATLAB implementations**, called through a thin bridge
+(`matlab/mfit.m` + `matlab/mpredict.m`, wrapped by `utils/models/matlab_lvgp.py`): `fit()` runs
+the actual `LVGP_fit` / `LVGP_fit_noise` (+ the aleatoric polynomial) in a `matlab -batch`
+subprocess and predictions come from `LVGP_predict(_noise)`. Costs ~30-40 s per fit and ~5-25 s
+per prediction batch (batch your grids; don't call in tight loops).
+
+| registry key | engine | idea | noise treatment |
 |---|---|---|---|
-| `separate_gp` | `separate_gp.py` | independent botorch GP per level | replicate var as fixed noise, per level |
-| `categorical_kernel` | `categorical_kernel.py` | single botorch GP, categorical kernel over levels | replicate var as fixed noise |
-| `lvgp_native` | `hetero_lvgp_native.py` (`LVGPNative`) | LVGP, homoscedastic (MATLAB `LVGP_fit` analogue) | none (nugget only) — the noise-blind baseline |
-| `heter_lvgp_native` | `hetero_lvgp_native.py` (`HeterLVGPNative`) | heteroscedastic LVGP as above | replicate var in the correlation matrix |
+| `separate_gp` | python (botorch) | independent GP per level | replicate var as fixed noise, per level |
+| `categorical_kernel` | python (botorch) | single GP, categorical kernel over levels | replicate var as fixed noise |
+| `standard_LVGP` | **MATLAB** (`LVGP_fit`) | LVGP, homoscedastic | none — the noise-blind baseline (`r()` = NaN) |
+| `heter_LVGP` | **MATLAB** (`LVGP_fit_noise`) | heteroscedastic LVGP | replicate var in the correlation matrix + aleatoric poly |
 
-Registry notes: `standard_LVGP`/`heter_LVGP` entries are MATLAB-engine metadata (`cls=None`) —
-inert here. `lvgp_torch`/`heter_lvgp_torch` wrap the external `lvgp-bayes` package (guarded
-import); kept for reference only — that implementation's modeling choices (z-scoring,
-FixedNoiseGaussianLikelihood, horseshoe priors) diverge from the MATLAB reference and were
-superseded by the native port.
+Reference-only entries (kept for fast iteration/debugging, NOT models of record):
+`lvgp_native` / `heter_lvgp_native` — the validated numpy ports of the MATLAB code (details
+below; useful when MATLAB round-trips are too slow for an experiment sweep, but any headline
+result should be produced or confirmed with the MATLAB engines); `lvgp_torch` /
+`heter_lvgp_torch` — the external `lvgp-bayes` wrapper, whose modeling choices diverge from the
+MATLAB reference.
 
 **Model interface** (all four):
 ```python
@@ -124,6 +131,9 @@ heteroscedasticity buys calibration, not raw accuracy (the categorical GP led ac
 
 ### Environment
 
+- MATLAB: `/data/zhq7531/MATLAB/bin/matlab` (R2026a, headless `-nodisplay -batch`; the bridge
+  sets isolated `MATLAB_PREFDIR`/`TMPDIR` per call and prepends `/data/zhq7531/envs/xvfblib/lib`
+  to `LD_LIBRARY_PATH` — required on this node).
 - Python: `/data/zhq7531/envs/ml_gp_env/bin/python` (torch 2.7.1, gpytorch 1.14, botorch 0.14.0,
   numpy 2.2.6, scipy 1.16). Register as a Jupyter kernel or run notebooks on the `ml_gp_env`
   kernel.
@@ -141,6 +151,8 @@ lvgp_modeling_study/
 │   ├── doe.py                 <- SLHD design generators
 │   ├── doe_cache.py           <- deterministic cached designs w/ replicates
 │   └── models/                <- the surrogate models (see table above)
+├── matlab/                    <- the lab's LVGP code (standard_lvgp/, heter_lvgp/) + the
+│                                 mfit.m / mpredict.m bridge + standalone aleatoric poly fns
 ├── notebooks/modeling.ipynb   <- starter: fit all 4 models, metrics vs ground truth
 ├── notes/                     <- personal working notes (gitignored)
 ├── results/                   <- experiment outputs (gitignored; regenerable)

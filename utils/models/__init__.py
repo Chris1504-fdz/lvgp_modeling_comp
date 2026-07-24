@@ -68,3 +68,16 @@ def get(name) -> ModelInfo:
     if name not in MODELS:
         raise KeyError(f"unknown model '{name}'. available: {list(MODELS)}")
     return MODELS[name]
+
+
+# ---------------------------------------------------------------------------
+# MODELING STUDY OVERRIDE: the MATLAB engines are the LVGP models OF RECORD here.
+# standard_LVGP / heter_LVGP are re-bound to the matlab bridge (mfit.m / mpredict.m), so
+# MODELS["heter_LVGP"].cls.fit(...) runs the lab's actual LVGP_fit_noise + aleatoric polynomial.
+# The python ports (lvgp_native / heter_lvgp_native) remain registered as reference only.
+# ---------------------------------------------------------------------------
+from .matlab_lvgp import MatlabStandardLVGP, MatlabHeterLVGP
+MODELS["standard_LVGP"] = ModelInfo("standard_LVGP", "matlab", BLIND, cls=MatlabStandardLVGP,
+                                    matlab_name="standard_lvgp", label="Standard LVGP (MATLAB)")
+MODELS["heter_LVGP"] = ModelInfo("heter_LVGP", "matlab", FULL, cls=MatlabHeterLVGP,
+                                 matlab_name="heter_lvgp", label="Heteroscedastic LVGP (MATLAB)")
