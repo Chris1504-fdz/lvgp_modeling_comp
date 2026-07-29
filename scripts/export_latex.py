@@ -29,7 +29,7 @@ ARROWS = {"MAE": r"MAE~$\downarrow$", "RRMSE": r"RRMSE~$\downarrow$",
           "IS": r"IS~$\downarrow$", "Coverage": r"Cov.~$\to.95$"}
 PROBLEMS = [("branin_hetero", "Branin", [(25, 25), (40, 40)]),
             ("sixhump_camel", "Six-hump camel", [(25, 25), (40, 40)]),
-            ("griewank_6d", "Griewank 6-D", [(40, 40), (80, 80), (160, 160)])]
+            ("griewank_6d", "Griewank 6-D", [(48, 48), (64, 64)])]
 SEED, N_REPS = 1, [10]
 
 _cache = {}
@@ -151,7 +151,9 @@ def wrapper():
         inputs.append("\\input{summary%s.tex}\n\\clearpage" % sfx)
         if not sfx:
             inputs.append("\\input{conclusions.tex}\n\\clearpage")
-            inputs.append("\\input{seed_summary.tex}\n\\clearpage")
+            for sf in ["", "_nocat"]:
+                if os.path.exists(os.path.join(OUT, f"seed_summary{sf}.tex")):
+                    inputs.append("\\input{seed_summary%s.tex}\n\\clearpage" % sf)
         for prob, _, _ in PROBLEMS:
             for nr in N_REPS:
                 inputs.append("\\input{%s_nrep%02d%s.tex}" % (prob, nr, sfx))
@@ -216,14 +218,14 @@ $$\sigma(x_1,\ell)=\Big[0.5+0.15(x_1+5)+\tfrac{2.5}{1+e^{-1.2(x_1-2)}}\Big]\,m(\
 \subsection*{Six-hump camel (5 levels: two pairs + bridge)}
 $$f(x_1,\ell)=\Big(4-2.1x_1^2+\tfrac{x_1^4}{3}\Big)x_1^2+x_1 x_2(\ell)+(-4+4x_2(\ell)^2)x_2(\ell)^2,
 \quad x_1\in[-2,2],\ x_2(\ell)\in\{-1.0,-0.85,0.0,0.85,1.0\}$$
-$$\sigma(x_1,\ell)=0.05\,e^{(0.4x_1)^2}\,m(\ell),\quad m(\ell)\in\{2.0,3.5,1.5,5.0,2.5\}$$
+$$\sigma(x_1,\ell)=\big(0.04+0.05\,x_1+0.06\,x_1^2\big)\,m(\ell),\quad m(\ell)\in\{2.0,3.5,1.5,5.0,2.5\}$$
 \begin{center}\includegraphics[width=0.85\linewidth]{figs/camel_truth.pdf}\end{center}
 
 \subsection*{Griewank 6-D (level-shifted pairs)}
 $$f(\mathbf{x}_q,\ell)=\sum_{i=1}^{6}\tfrac{xs_i^2}{4000}-\prod_{i=1}^{6}\cos\big(\tfrac{xs_i}{\sqrt i}\big)+1+b(\ell),
 \quad xs=[\mathbf{x}_q, v(\ell)],\ \mathbf{x}_q\in[-3,3]^5$$
 $$v(\ell)\in\{0.5,1.3,2.7,3.1\},\quad b(\ell)\in\{0,0.15,0.6,0.75\},\quad
-\sigma(\mathbf{x}_q,\ell)=0.02\sqrt{1+0.1\|\mathbf{x}_q\|^2/5}\;m(\ell),\quad
+\sigma(\mathbf{x}_q,\ell)=0.02\,e^{0.03\|\mathbf{x}_q\|^2}\;m(\ell),\quad
 m(\ell)\in\{1.5,1.0,3.0,2.0\}$$
 \begin{center}\includegraphics[width=0.85\linewidth]{figs/griewank_truth.pdf}\end{center}
 \clearpage
@@ -237,13 +239,10 @@ def github_variant():
     os.makedirs(figs, exist_ok=True)
     for f in ["branin_truth.pdf", "camel_truth.pdf", "griewank_truth.pdf"]:
         shutil.copy2(os.path.join(OUT, "figs", f), os.path.join(figs, f))
-    table_files = ["summary.tex", "summary_nocat.tex"]
-    for prob, _, _ in PROBLEMS:
-        for nr in N_REPS:
-            for sfx in ["", "_nocat"]:
-                table_files.append(f"{prob}_nrep{nr:02d}{sfx}.tex")
-    if os.path.exists(os.path.join(OUT, "seed_summary.tex")):
-        table_files.insert(2, "seed_summary.tex")
+    # GitHub version carries ONLY the multi-seed tables (user request 2026-07-29):
+    # single-seed tables (summary + per-level) stay in the internal latex/ report.
+    table_files = [f"seed_summary{sf}.tex" for sf in ["", "_nocat"]
+                   if os.path.exists(os.path.join(OUT, f"seed_summary{sf}.tex"))]
     for f in table_files:
         shutil.copy2(os.path.join(OUT, f), os.path.join(GITHUB_OUT, f))
     open(os.path.join(GITHUB_OUT, "problems_def.tex"), "w").write(PROBLEM_DEFS)

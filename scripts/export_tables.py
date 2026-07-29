@@ -27,7 +27,7 @@ SETS = [("metric_tables.xlsx", ["separate_gp", "categorical_kernel", "standard_L
 METRICS = ["MAE", "RRMSE", "IS", "Coverage"]
 PROBLEMS = [("branin_hetero", "Branin", [(25, 25), (40, 40)], "branin"),
             ("sixhump_camel", "Six-hump camel", [(25, 25), (40, 40)], "camel"),
-            ("griewank_6d", "Griewank 6-D", [(40, 40), (80, 80), (160, 160)], "griewank")]
+            ("griewank_6d", "Griewank 6-D", [(48, 48), (64, 64)], "griewank")]
 SEED, N_REPS = 1, [10]
 
 BOLD_GREEN = Font(bold=True, color="1F6B3B")

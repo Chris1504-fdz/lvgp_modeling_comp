@@ -20,7 +20,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 # Dropped: n_rep=3 (too few), branin n=10 / camel n=8 (data-starved), rastrigin_6d (excluded).
 CONFIGS = [("branin_hetero", 25), ("branin_hetero", 40),
            ("sixhump_camel", 25), ("sixhump_camel", 40),
-           ("griewank_6d", 40), ("griewank_6d", 80), ("griewank_6d", 160)]
+           ("griewank_6d", 48), ("griewank_6d", 64)]
 MODELS = ["separate_gp", "categorical_kernel", "standard_LVGP", "heter_LVGP"]
 N_REPS = [10]
 SEED = 1

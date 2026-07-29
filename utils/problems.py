@@ -136,8 +136,16 @@ def _camel_f(x1, level):
     x1 = np.asarray(x1, float); x2 = _CAMEL_VALS[level - 1]
     return (4 - 2.1 * x1 ** 2 + x1 ** 4 / 3) * x1 ** 2 + x1 * x2 + (-4 + 4 * x2 ** 2) * x2 ** 2
 def _camel_sigma(x1, level):
+    # v4.3 HIGH-CONTRAST POLYNOMIAL noise, RAISED FLOOR (2026-07-29, user request): v4.1's
+    # base (range 2.5x) was too smooth -- equal weighting barely costs anything, so the
+    # noise-blind standard LVGP kept the best n=25 mean (30-seed robust). v4.2 steepened it
+    # to 35x but its basin (base 0.0096) collapsed all level sigmas to a near-common point
+    # (0.019-0.048) -- categories indistinguishable in noise there. v4.3 raises the floor:
+    # basin base 0.0296 at x=-5/12 (level sigmas 0.044-0.148, clearly separated), right edge
+    # 0.38, ~13x within-level ratio. Quiet-region points stay gold, loud-region points cheap.
+    # Still a polynomial in sigma (NOT log-sigma: mild misspecification kept).
     x1 = np.asarray(x1, float)
-    return 0.05 * np.exp((0.4 * x1) ** 2) * _CAMEL_MULS[level - 1]
+    return (0.04 + 0.05 * x1 + 0.06 * x1 ** 2) * _CAMEL_MULS[level - 1]
 CAMEL = ProblemSpec("sixhump_camel", _camel_f, _camel_sigma, -2.0, 2.0, 5,
                     meta=dict(cat_values=_CAMEL_VALS, noise_muls=_CAMEL_MULS))
 
@@ -270,7 +278,13 @@ def _griewank6d_sigma(X, level):
     # even after 10-replicate averaging) -> RRMSE >= 1 for every model at every budget
     # (10/20/40 pts/level): a wash-out. At 0.02, levels 3-4 sit at sigma/std(f) ~ 1.33 raw,
     # ~0.42 after replicate averaging -- the same learnable regime as the 1-D problems.
-    return 0.02 * np.sqrt(1.0 + 0.1 * np.sum(X ** 2, axis=1) / 5.0) * _G6_MULS[level - 1]
+    # v3 EXPONENTIAL noise (2026-07-29, user request): the sqrt base was nearly flat over
+    # [-3,3]^5 (range 1.38x). Exponential-of-quadratic keeps the 0.02 scale at the origin
+    # (where every level's minimum sits: quiet where it matters) and reaches 0.02*e^1.35 ~
+    # 0.077 at the corners (~3.9x within-level range). log(sigma) is EXACTLY quadratic in x
+    # -> perfectly representable by the aleatoric polynomial: griewank anchors the
+    # well-specified end of the branin(step)/camel(poly-in-sigma)/griewank gradient.
+    return 0.02 * np.exp(0.03 * np.sum(X ** 2, axis=1)) * _G6_MULS[level - 1]
 
 
 _G6_FSTAR = [float(b + v * v / 4000.0 + 1.0 - np.cos(v / np.sqrt(6.0)))

@@ -1,0 +1,28 @@
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\caption{30-seed replication (fixed design, fresh noise replicates per seed): mean $\pm$ std over seeds. Bold on green = best mean per (problem, budget) block (coverage: closest to $0.95$). Without the Categorical GP (3-model comparison; winners recomputed).}
+\label{tab:seeds_nocat}
+\begin{tabular}{lllrrrr}
+\toprule
+Problem & $n$ & Model & MAE & RRMSE & IS & Coverage \\
+\midrule
+\multirow{6}{*}{Branin} & \multirow{3}{*}{25} & Separate GPs & $10.91 \pm 0.466$ & $0.434 \pm 0.022$ & $113.7 \pm 11.60$ & $0.775 \pm 0.028$ \\
+ &  & Standard LVGP & $4.419 \pm 1.063$ & $0.212 \pm 0.051$ & $74.80 \pm 30.69$ & $0.442 \pm 0.143$ \\
+ &  & H-LVGP & \colorbox{green!20}{\boldmath$2.520 \pm 0.723$} & \colorbox{green!20}{\boldmath$0.096 \pm 0.037$} & \colorbox{green!20}{\boldmath$37.28 \pm 20.11$} & \colorbox{green!20}{\boldmath$0.996 \pm 0.016$} \\
+\cmidrule(lr){2-7}
+ & \multirow{3}{*}{40} & Separate GPs & $4.454 \pm 0.361$ & $0.208 \pm 0.017$ & $42.88 \pm 1.784$ & \colorbox{green!20}{\boldmath$0.931 \pm 0.011$} \\
+ &  & Standard LVGP & $3.109 \pm 0.705$ & $0.122 \pm 0.030$ & $62.82 \pm 20.09$ & $0.410 \pm 0.145$ \\
+ &  & H-LVGP & \colorbox{green!20}{\boldmath$1.722 \pm 0.425$} & \colorbox{green!20}{\boldmath$0.064 \pm 0.019$} & \colorbox{green!20}{\boldmath$35.61 \pm 10.83$} & $0.998 \pm 0.008$ \\
+\midrule
+\multirow{6}{*}{Six-hump camel} & \multirow{3}{*}{25} & Separate GPs & $0.231 \pm 0.009$ & $0.319 \pm 0.007$ & \colorbox{green!20}{\boldmath$2.072 \pm 0.061$} & \colorbox{green!20}{\boldmath$0.952 \pm 0.008$} \\
+ &  & Standard LVGP & \colorbox{green!20}{\boldmath$0.152 \pm 0.018$} & \colorbox{green!20}{\boldmath$0.242 \pm 0.029$} & $3.405 \pm 0.521$ & $0.417 \pm 0.097$ \\
+ &  & H-LVGP & $0.178 \pm 0.012$ & $0.287 \pm 0.016$ & $2.153 \pm 0.231$ & $0.905 \pm 0.017$ \\
+\cmidrule(lr){2-7}
+ & \multirow{3}{*}{40} & Separate GPs & $0.196 \pm 0.008$ & $0.295 \pm 0.006$ & $2.313 \pm 0.111$ & $0.888 \pm 0.015$ \\
+ &  & Standard LVGP & $0.145 \pm 0.034$ & \colorbox{green!20}{\boldmath$0.212 \pm 0.066$} & $3.240 \pm 1.092$ & $0.324 \pm 0.106$ \\
+ &  & H-LVGP & \colorbox{green!20}{\boldmath$0.143 \pm 0.024$} & $0.226 \pm 0.042$ & \colorbox{green!20}{\boldmath$1.147 \pm 0.318$} & \colorbox{green!20}{\boldmath$0.953 \pm 0.029$} \\
+\bottomrule
+\end{tabular}
+\end{table}
