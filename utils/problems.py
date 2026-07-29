@@ -90,7 +90,11 @@ class ProblemSpec:
 #  WORKED REFERENCE: heteroscedastic Branin (== study_v2 / study_v2_gp)
 # ======================================================================================
 _BRANIN_VAR_FCTR = np.array([15, 2, 8, 0, 10.0])                 # Branin x2 value per level
-_BRANIN_NOISE_MULS = np.array([1.00, 0.70, 0.90, 0.50, 1.20]) * 10
+# v2 noise (contributor update 2026-07-28, temp/main_LVGP_both_models.m): the original smooth
+# 0.135*exp((0.15 x)^2) * {10,7,9,5,12} lacked contrast over the domain; the new base has a
+# LOW-noise region (x<0) and a HIGH-noise region (x>4) via a sigmoid step at x~2, and the level
+# multipliers span 7x. NOTE: deliberately diverges from the study_v2 reference noise.
+_BRANIN_NOISE_MULS = np.array([0.5, 1.0, 1.8, 2.5, 3.5])
 
 
 def _branin_raw(x1, x2):
@@ -105,7 +109,8 @@ def _branin_f(x1, level):
 
 def _branin_sigma(x1, level):
     x1 = np.asarray(x1, float)
-    return 0.135 * np.exp((0.15 * x1) ** 2) * _BRANIN_NOISE_MULS[level - 1]
+    base = 0.5 + 0.15 * (x1 + 5.0) + 2.5 / (1.0 + np.exp(-1.2 * (x1 - 2.0)))
+    return base * _BRANIN_NOISE_MULS[level - 1]
 
 
 BRANIN = ProblemSpec(
@@ -117,15 +122,23 @@ BRANIN = ProblemSpec(
 # ======================================================================================
 #  TP-2  Six-Hump Camel-Back (redesigned) -- 1 continuous + 4 levels
 # ======================================================================================
-_CAMEL_VALS = [0.2, 0.4, 0.7, 1.0]
-_CAMEL_MULS = [2.0, 3.5, 1.5, 5.0]
+# v4 levels (2026-07-28, user request: 5 categories): two PAIRS + a MIDDLE BRIDGE --
+# {-1.0,-0.85} and {0.85,1.0} at within-pair curve RMS 0.82 (the approved v2.1 width), middle
+# level 3 (v=0, the pure base camel) at 1.16-1.27 from everything, cross-pair 1.97-2.32.
+# Three similarity scales over 10 level pairs (0.82 / ~1.2 / ~2.2); 5 levels matches branin.
+# Noise multipliers split: pair A {2.0, 3.5}, middle 1.5 (quietest), pair B {5.0, 2.5}.
+# History: v1 {0.2,0.4,0.7,1.0} blob; v2.0 +-{0.95,1.0} tight pairs (H-LVGP won n=32);
+# v2.1 +-{0.85,1.0} widened (CatGP won); v3 {-1,-0.95,0,1} hierarchy (falsified the
+# "unequal similarities => latent wins" hypothesis -- CatGP won bigger).
+_CAMEL_VALS = [-1.0, -0.85, 0.0, 0.85, 1.0]
+_CAMEL_MULS = [2.0, 3.5, 1.5, 5.0, 2.5]
 def _camel_f(x1, level):
     x1 = np.asarray(x1, float); x2 = _CAMEL_VALS[level - 1]
     return (4 - 2.1 * x1 ** 2 + x1 ** 4 / 3) * x1 ** 2 + x1 * x2 + (-4 + 4 * x2 ** 2) * x2 ** 2
 def _camel_sigma(x1, level):
     x1 = np.asarray(x1, float)
     return 0.05 * np.exp((0.4 * x1) ** 2) * _CAMEL_MULS[level - 1]
-CAMEL = ProblemSpec("sixhump_camel", _camel_f, _camel_sigma, -2.0, 2.0, 4,
+CAMEL = ProblemSpec("sixhump_camel", _camel_f, _camel_sigma, -2.0, 2.0, 5,
                     meta=dict(cat_values=_CAMEL_VALS, noise_muls=_CAMEL_MULS))
 
 # ======================================================================================
@@ -215,6 +228,63 @@ GRIEWANK10D = ProblemSpec(
     "griewank_10d", _griewank10d_f, _griewank10d_sigma, bounds=[(-5.0, 5.0)] * 9, n_levels=4,
     meta=dict(cat_values=_G10_VALS.tolist(), noise_muls=_G10_MULS.tolist(),
               f_star=_G10_FSTAR[0], opt_level=1, x_star=[0.0] * 9, f_star_per_level=_G10_FSTAR),
+)
+
+
+# ======================================================================================
+#  TP-5b  Griewank 6-D (2026-07-28, user request) -- the TP-5 10-D design rescaled to
+#  5 continuous dims + the level value as x6:
+#     f(xq, l) = sum_{i=1..6} xs_i^2/4000 - prod_{i=1..6} cos(xs_i/sqrt(i)) + 1,  xs=[xq, v(l)]
+#     sigma    = 0.05*sqrt(1 + 0.1*||xq||^2/5) * mult(l)
+#  Level values (paired-cluster design, 2026-07-28): v enters ONLY through even terms (v^2 and
+#  cos(v/sqrt(6))), so +/-v would be IDENTICAL functions (the degeneracy the TP-5 sheet warns
+#  about) -- clusters must come from PROXIMITY of positive values. v1.1 pairs {0.5, 1.3} &
+#  {2.7, 3.1}: within-pair curve RMS 0.016/0.021, cross-pair 0.057-0.093 (~3-4.5x contrast).
+#  (The first draft {0.7,0.9}&{2.9,3.1} was judged TOO CLOSE within pairs, 0.004/0.011.)
+#  cos(v/sqrt(6)) = {0.979, 0.862, 0.452, 0.301} all > 0 -> unique global min at xq = 0 per
+#  level; f* = {0.021, 0.139, 0.550, 0.702} distinct. This is the structure an LVGP latent can
+#  map (two clusters) that an exchangeable categorical kernel cannot express.
+# ======================================================================================
+_G6_VALS = np.array([0.5, 1.3, 2.7, 3.1])
+_G6_MULS = np.array([1.5, 1.0, 3.0, 2.0])
+# v2 (2026-07-28, user: "levels feel very close"): per-level OFFSETS b(l), the TP-7
+# rastrigin-style level shift. The cos(v/sqrt(6)) channel alone bounds level separation at
+# 0.02-0.11 curve RMS (vs signal std 0.05-0.16); with b the pairs {1,2} & {3,4} sit at
+# within-pair RMS 0.152/0.153 and cross-pair 0.46-0.76 (3-10x signal std) -- the same
+# separable-pairs regime as camel v4. Minima stay unique at xq=0; f* = b + v^2/4000 + 1
+# - cos(v/sqrt(6)) = {0.021, 0.289, 1.150, 1.452}, well-separated.
+_G6_B = np.array([0.0, 0.15, 0.6, 0.75])
+_G6_SQRT_I = np.sqrt(np.arange(1, 7, dtype=float))
+
+
+def _griewank6d_f(X, level):
+    v = _G6_VALS[level - 1]
+    XS = np.hstack([X, np.full((X.shape[0], 1), v)])
+    return (np.sum(XS ** 2, axis=1) / 4000.0 - np.prod(np.cos(XS / _G6_SQRT_I), axis=1)
+            + 1.0 + _G6_B[level - 1])
+
+
+def _griewank6d_sigma(X, level):
+    # v1.2 noise base 0.05 -> 0.02 (2026-07-28): at 0.05 the noise was benign in CV terms
+    # (sigma/|f| = 7-20%) but reached 3.3x the SIGNAL VARIATION std(f) on levels 3-4 (1.05x
+    # even after 10-replicate averaging) -> RRMSE >= 1 for every model at every budget
+    # (10/20/40 pts/level): a wash-out. At 0.02, levels 3-4 sit at sigma/std(f) ~ 1.33 raw,
+    # ~0.42 after replicate averaging -- the same learnable regime as the 1-D problems.
+    return 0.02 * np.sqrt(1.0 + 0.1 * np.sum(X ** 2, axis=1) / 5.0) * _G6_MULS[level - 1]
+
+
+_G6_FSTAR = [float(b + v * v / 4000.0 + 1.0 - np.cos(v / np.sqrt(6.0)))
+             for v, b in zip(_G6_VALS, _G6_B)]
+# v1.3 domain [-3,3]^5 (2026-07-28): over [-5,5]^5 the 5-way cosine product oscillates and is
+# unresolvable by a stationary GP at <=160 pts (isolation experiments: budget ladder AND noise
+# rescale both left RRMSE >= 1.1). Over [-3,3]^5 each factor spans at most half a period -> a
+# smooth resolvable bump; pair structure preserved (within 0.019/0.024, cross 0.066-0.11) and
+# worst-level replicate-mean noise = 0.30 x std(f).
+GRIEWANK6D = ProblemSpec(
+    "griewank_6d", _griewank6d_f, _griewank6d_sigma, bounds=[(-3.0, 3.0)] * 5, n_levels=4,
+    meta=dict(cat_values=_G6_VALS.tolist(), noise_muls=_G6_MULS.tolist(),
+              b_shift=_G6_B.tolist(),
+              f_star=_G6_FSTAR[0], opt_level=1, x_star=[0.0] * 5, f_star_per_level=_G6_FSTAR),
 )
 
 
@@ -381,6 +451,7 @@ PROBLEMS = {
     "griewank_2d":   GRIEWANK2D,    # TP-3  (1-D, 4 levels)
     "ackley_2d":     ACKLEY2D,      # TP-4  (1-D, 4 levels)
     "griewank_10d":  GRIEWANK10D,             # TP-5  (9-D, 4 levels) LIVE
+    "griewank_6d":   GRIEWANK6D,              # TP-5b (5-D, 4 levels) LIVE -- 6-D rescale of TP-5
     "ackley_10d":    ACKLEY10D,                # TP-6  (9-D, 4 levels) LIVE
     "rastrigin_6d":  RASTRIGIN6D,              # TP-7  (5-D, 4 levels) LIVE
     "golinski":      GOLINSKI,                 # ENG-1 (6-D, 5 levels) LIVE

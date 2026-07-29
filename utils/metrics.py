@@ -9,9 +9,9 @@ predictive std s_i (epistemic; callers may add aleatoric variance for observatio
 
   MAE      = mean |mu_i - f_i|                                    (surface accuracy; lower better)
   RRMSE    = sqrt(mean (mu_i - f_i)^2) / std(f_i)                 (relative accuracy; lower better)
-  Coverage = frac( |mu_i - f_i| <= z * s_i ),  z = 1.645 (90% CI)  (calibration; target = 0.90)
-  IS       = Gneiting-Raftery 90% interval score, mean over i      (accuracy+calibration; lower)
-             [L_i, U_i] = mu_i -/+ z s_i, alpha = 0.10:
+  Coverage = frac( |mu_i - f_i| <= z * s_i ),  z = 1.96 (95% CI)   (calibration; target = 0.95)
+  IS       = Gneiting-Raftery 95% interval score, mean over i      (accuracy+calibration; lower)
+             [L_i, U_i] = mu_i -/+ z s_i, alpha = 0.05:
              IS_i = (U_i - L_i) + (2/alpha)(L_i - f_i)_+ + (2/alpha)(f_i - U_i)_+
 
 RRMSE normalizes by the per-level std of the TRUE surface over the test set, so it is comparable
@@ -20,8 +20,10 @@ across levels and problems (RRMSE ~ 1 means "no better than predicting the level
 import numpy as np
 import pandas as pd
 
-Z90 = 1.6448536269514722          # Phi^{-1}(0.95): two-sided 90% interval
-ALPHA = 0.10
+Z95 = 1.959963984540054           # Phi^{-1}(0.975): two-sided 95% interval
+ALPHA = 0.05
+Z90 = Z95                         # legacy alias (metric switched from 90% to 95% on request)
+COV_TARGET = 1.0 - ALPHA
 
 
 def interval_score(f, lo, hi, alpha=ALPHA):
@@ -37,12 +39,12 @@ def level_metrics(f_true, mu, s):
     f, mu, s = (np.asarray(a, float).ravel() for a in (f_true, mu, s))
     err = mu - f
     sd = f.std()
-    lo, hi = mu - Z90 * s, mu + Z90 * s
+    lo, hi = mu - Z95 * s, mu + Z95 * s
     return dict(
         MAE=float(np.mean(np.abs(err))),
         RRMSE=float(np.sqrt(np.mean(err ** 2)) / (sd if sd > 0 else 1.0)),
         IS=interval_score(f, lo, hi),
-        Coverage=float(np.mean(np.abs(err) <= Z90 * s)),
+        Coverage=float(np.mean(np.abs(err) <= Z95 * s)),
     )
 
 
@@ -82,9 +84,45 @@ def combined_table(tables_by_model):
 
 def rank_summary(tables_by_model):
     """Mean-row summary across models: one row per model with the 4 pooled metrics, plus the
-    winner per metric (min for MAE/RRMSE/IS; closest to 0.90 for Coverage)."""
+    winner per metric (min for MAE/RRMSE/IS; closest to COV_TARGET for Coverage)."""
     out = pd.DataFrame({m: t.loc["Mean"] for m, t in tables_by_model.items()}).T
-    best = {c: (out[c].sub(0.90).abs().idxmin() if c == "Coverage" else out[c].idxmin())
+    best = {c: (out[c].sub(COV_TARGET).abs().idxmin() if c == "Coverage" else out[c].idxmin())
             for c in out.columns}
     out.loc["<best>"] = [best[c] for c in out.columns]
     return out
+
+
+# ---------------------------------------------------------------------------
+# Additional UQ metrics (section 9-10 of the study notebook).
+# Miscalibration area + NLL follow Ozbayram et al. (CMAME 2024) / Tran et al. (2020);
+# noise-surface recovery (nMAE) is possible here because the problems are synthetic
+# (analytic sigma^2), mirroring the paper's 1-D known-noise test case quantitatively.
+# ---------------------------------------------------------------------------
+from scipy.stats import norm as _norm
+
+
+def miscalibration_area(f_true, mu, s, n_grid=101):
+    """Area between the ECDF of normalized residuals z=(f-mu)/s and the standard-Gaussian CDF
+    (Tran et al. 2020). 0 = perfectly calibrated at every level; ~0.5 = maximally miscalibrated."""
+    f, mu, s = (np.asarray(a, float).ravel() for a in (f_true, mu, s))
+    z = (f - mu) / np.maximum(s, 1e-12)
+    ps = np.linspace(0.01, 0.99, n_grid)
+    obs = np.array([(z <= q).mean() for q in _norm.ppf(ps)])
+    return float(np.trapezoid(np.abs(obs - ps), ps))
+
+
+def nll(f_true, mu, s):
+    """Mean Gaussian negative log predictive density of the truth (proper score; lower better).
+    Punishes overconfidence quadratically in the standardized error."""
+    f, mu, s = (np.asarray(a, float).ravel() for a in (f_true, mu, s))
+    s2 = np.maximum(s, 1e-12) ** 2
+    return float(np.mean(0.5 * np.log(2.0 * np.pi * s2) + 0.5 * (f - mu) ** 2 / s2))
+
+
+def noise_nmae(r, sigma2_true):
+    """Normalized MAE of the predicted aleatoric VARIANCE surface r(x) vs the true sigma^2:
+    mean|r - sigma2| / mean sigma2. NaN-safe (the standard LVGP has r = NaN)."""
+    r, s2 = (np.asarray(a, float).ravel() for a in (r, sigma2_true))
+    if np.all(np.isnan(r)):
+        return float("nan")
+    return float(np.nanmean(np.abs(r - s2)) / np.mean(s2))

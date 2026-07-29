@@ -39,7 +39,54 @@ PRED_TIMEOUT_S = 900
 # checkout failure.
 LAUNCH_GAP_S = float(os.environ.get("MLVGP_LAUNCH_GAP_S", "8"))
 _STAMP = os.path.join(tempfile.gettempdir(), f"mlvgp_launch_{os.getuid()}.stamp")
-_N_RETRY = 6
+_N_RETRY = 12
+XVFB_BIN = "/data/zhq7531/MATLAB/sys/Xvfb/bin/glnxa64/Xvfb"
+_XVFB_STAMP = os.path.join(tempfile.gettempdir(), f"mlvgp_xvfb_{os.getuid()}.stamp")
+
+
+def _alive(pid):
+    try:
+        os.kill(int(pid), 0)
+        return True
+    except OSError:
+        return False
+
+
+def _ensure_shared_xvfb():
+    """ONE shared Xvfb per user (parent run.py pattern). Without a DISPLAY, every MATLAB launch
+    spawns its own Xvfb + fluxbox -- under concurrency that multiplies X servers and MSH
+    connections and provokes license-5001 bursts. Flock-guarded so parallel workers and even
+    concurrent drivers agree on a single display; the Xvfb outlives any one driver."""
+    if os.environ.get("BENCH_DISPLAY"):
+        return os.environ["BENCH_DISPLAY"]
+    with open(_XVFB_STAMP, "a+") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        try:
+            fh.seek(0)
+            parts = fh.read().split()
+            if len(parts) == 2 and _alive(parts[1]):
+                n = parts[0].lstrip(":")
+                if os.path.exists(f"/tmp/.X11-unix/X{n}"):
+                    return parts[0]
+            env = dict(os.environ)
+            env["LD_LIBRARY_PATH"] = XVFB_LIBDIR + ":" + env.get("LD_LIBRARY_PATH", "")
+            for n in range(90, 130):
+                if os.path.exists(f"/tmp/.X11-unix/X{n}"):
+                    continue
+                pr = subprocess.Popen([XVFB_BIN, f":{n}", "-screen", "0", "1x1x8",
+                                       "-nolisten", "tcp"], env=env, start_new_session=True,
+                                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                time.sleep(2.0)
+                if pr.poll() is None and os.path.exists(f"/tmp/.X11-unix/X{n}"):
+                    fh.seek(0); fh.truncate(); fh.write(f":{n} {pr.pid}"); fh.flush()
+                    return f":{n}"
+                try:
+                    pr.kill()
+                except Exception:
+                    pass
+            return ""
+        finally:
+            fcntl.flock(fh, fcntl.LOCK_UN)
 
 
 def _throttle():
@@ -62,7 +109,7 @@ def _throttle():
 
 def _run_matlab(call, timeout):
     env = dict(os.environ)
-    env["DISPLAY"] = os.environ.get("BENCH_DISPLAY", "")
+    env["DISPLAY"] = _ensure_shared_xvfb()          # shared Xvfb: no per-launch X server spawn
     env["LD_LIBRARY_PATH"] = XVFB_LIBDIR + ":" + env.get("LD_LIBRARY_PATH", "")
     last_err = ""
     for attempt in range(_N_RETRY):
@@ -83,7 +130,7 @@ def _run_matlab(call, timeout):
             shutil.rmtree(pref, ignore_errors=True); shutil.rmtree(tmp, ignore_errors=True)
         if not licensed_out:                     # real MATLAB error -> no point retrying
             break
-        time.sleep(20 + 10 * attempt + random.uniform(0, 8))
+        time.sleep(20 + 15 * attempt + random.uniform(0, 10))
     raise RuntimeError(f"MATLAB failed after retries ({call.split('(')[0]}): {last_err}")
 
 

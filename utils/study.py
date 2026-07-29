@@ -37,30 +37,42 @@ def test_points(spec):
     return {lv: X for lv in spec.levels}
 
 
-def train_data(problem, seed, n_rep, n_init=None):
+def train_data(problem, seed, n_rep, n_init=None, design_seed=None):
     """Shared cached SLHD design -> the per-level dict every model's fit() consumes."""
     spec = P.get(problem)
-    ds = doe_cache.load(problem, seed, n_rep, n_init=n_init)
+    ds = doe_cache.load(problem, seed, n_rep, n_init=n_init, design_seed=design_seed)
     X, Y, V = ds["X_sample"], ds["Y_sample"], ds["Var_sample"]
     lv_col = X[:, spec.d].astype(int)
     return {int(lv): dict(X=X[lv_col == lv, :spec.d], y_mean=Y[lv_col == lv],
                           y_var=V[lv_col == lv]) for lv in spec.levels}, ds
 
 
-def _cache_path(problem, model, seed, n_rep, n_init=None):
+# Multi-seed (fixed-design) campaigns live under results_v2/results_files, organized
+# <problem>/<model>/, so they never mix with the single-seed exploration caches in results/
+# (user request 2026-07-28). ANY design_seed (including == seed) routes there, so a campaign
+# is self-contained for sharing; seed-1 cells are duplicated from the plain cache.
+CACHE_ROOT_V2 = os.path.join(HERE, "results_v2", "results_files")
+
+
+def _cache_path(problem, model, seed, n_rep, n_init=None, design_seed=None):
     tag = "" if n_init is None or int(n_init) == P.get(problem).n_init else f"_n{int(n_init):03d}"
-    return os.path.join(CACHE_ROOT, problem, f"{model}_seed{seed:02d}_nrep{n_rep:02d}{tag}.npz")
+    if design_seed is None:
+        return os.path.join(CACHE_ROOT, problem,
+                            f"{model}_seed{seed:02d}_nrep{n_rep:02d}{tag}.npz")
+    fd = f"_fd{int(design_seed):02d}"
+    return os.path.join(CACHE_ROOT_V2, problem, model,
+                        f"{model}_seed{seed:02d}_nrep{n_rep:02d}{tag}{fd}.npz")
 
 
-def fit_predict(problem, model, seed, n_rep, n_init=None, verbose=True):
+def fit_predict(problem, model, seed, n_rep, n_init=None, design_seed=None, verbose=True):
     """Cached (mu, s2, r) on the fixed test set. Returns {level: dict(mu, s2, r)}."""
-    p = _cache_path(problem, model, seed, n_rep, n_init)
+    p = _cache_path(problem, model, seed, n_rep, n_init, design_seed)
     spec = P.get(problem)
     if not os.path.exists(p):
         if verbose:
             print(f"[fit] {problem} / {model} / seed {seed} (nrep {n_rep}, n_init {n_init}) ...",
                   flush=True)
-        data, _ = train_data(problem, seed, n_rep, n_init)
+        data, _ = train_data(problem, seed, n_rep, n_init, design_seed)
         mdl = MODELS[model].cls.fit(data, needs_r=True, bounds=spec.bounds)
         out = {}
         for lv, Xt in test_points(spec).items():
@@ -80,9 +92,9 @@ class CachedPredictions:
     """Adapter giving cached arrays the model interface metrics_table() expects. Test inputs must
     be exactly the study's fixed test set (asserted by shape)."""
 
-    def __init__(self, problem, model, seed, n_rep, n_init=None):
+    def __init__(self, problem, model, seed, n_rep, n_init=None, design_seed=None):
         self.spec = P.get(problem)
-        self.pred = fit_predict(problem, model, seed, n_rep, n_init)
+        self.pred = fit_predict(problem, model, seed, n_rep, n_init, design_seed)
 
     def mean_std(self, level, X):
         d = self.pred[int(level)]
