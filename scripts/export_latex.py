@@ -202,7 +202,7 @@ def main():
 # GitHub variant: tables + test-function definitions/figures ONLY (no legend,
 # no conclusions, no commentary). Self-contained under results_v2/latex/.
 # ---------------------------------------------------------------------------
-GITHUB_OUT = os.path.join(HERE, "results_v2", "latex")
+GITHUB_OUT = os.path.join(HERE, "latex_v2")
 
 PROBLEM_DEFS = r"""\section*{Test problems}
 

@@ -1,0 +1,32 @@
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\caption{30-seed replication (fixed design, fresh noise replicates per seed): mean $\pm$ std over seeds. Bold = best mean per (problem, budget) block (coverage: closest to $0.95$).}
+\label{tab:seeds}
+\begin{tabular}{lllrrrr}
+\toprule
+Problem & $n$ & Model & MAE & RRMSE & IS & Coverage \\
+\midrule
+\multirow{8}{*}{Branin} & \multirow{4}{*}{25} & Separate GPs & $10.908 \pm 0.466$ & $0.434 \pm 0.022$ & $113.7 \pm 11.604$ & $0.775 \pm 0.028$ \\
+ &  & Categorical GP & $4.529 \pm 0.241$ & $0.159 \pm 0.011$ & $38.874 \pm 2.018$ & \boldmath $0.945 \pm 0.010$ \\
+ &  & Standard LVGP & $4.419 \pm 1.063$ & $0.212 \pm 0.051$ & $74.800 \pm 30.689$ & $0.442 \pm 0.143$ \\
+ &  & H-LVGP & \boldmath $2.520 \pm 0.723$ & \boldmath $0.096 \pm 0.037$ & \boldmath $37.281 \pm 20.109$ & $0.996 \pm 0.016$ \\
+\cmidrule(lr){2-7}
+ & \multirow{4}{*}{40} & Separate GPs & $4.454 \pm 0.361$ & $0.208 \pm 0.017$ & $42.877 \pm 1.784$ & \boldmath $0.931 \pm 0.011$ \\
+ &  & Categorical GP & \boldmath $1.585 \pm 0.268$ & \boldmath $0.054 \pm 0.012$ & \boldmath $14.864 \pm 0.896$ & $0.996 \pm 0.010$ \\
+ &  & Standard LVGP & $3.109 \pm 0.705$ & $0.122 \pm 0.030$ & $62.823 \pm 20.089$ & $0.410 \pm 0.145$ \\
+ &  & H-LVGP & $1.722 \pm 0.425$ & $0.064 \pm 0.019$ & $35.613 \pm 10.826$ & $0.998 \pm 0.008$ \\
+\midrule
+\multirow{8}{*}{Six-hump camel} & \multirow{4}{*}{25} & Separate GPs & $0.231 \pm 0.009$ & $0.319 \pm 0.007$ & $2.072 \pm 0.061$ & \boldmath $0.951 \pm 0.008$ \\
+ &  & Categorical GP & $0.168 \pm 0.009$ & $0.262 \pm 0.010$ & \boldmath $1.778 \pm 0.136$ & $0.923 \pm 0.012$ \\
+ &  & Standard LVGP & \boldmath $0.152 \pm 0.018$ & \boldmath $0.242 \pm 0.029$ & $3.405 \pm 0.521$ & $0.417 \pm 0.097$ \\
+ &  & H-LVGP & $0.178 \pm 0.012$ & $0.287 \pm 0.016$ & $2.153 \pm 0.231$ & $0.905 \pm 0.017$ \\
+\cmidrule(lr){2-7}
+ & \multirow{4}{*}{40} & Separate GPs & $0.196 \pm 0.008$ & $0.295 \pm 0.006$ & $2.313 \pm 0.111$ & $0.888 \pm 0.015$ \\
+ &  & Categorical GP & \boldmath $0.114 \pm 0.010$ & \boldmath $0.160 \pm 0.015$ & \boldmath $1.127 \pm 0.164$ & $0.918 \pm 0.013$ \\
+ &  & Standard LVGP & $0.145 \pm 0.034$ & $0.212 \pm 0.066$ & $3.240 \pm 1.092$ & $0.324 \pm 0.106$ \\
+ &  & H-LVGP & $0.143 \pm 0.024$ & $0.226 \pm 0.042$ & $1.147 \pm 0.318$ & \boldmath $0.953 \pm 0.029$ \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,29 @@
+\begin{table}[htbp]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\setlength{\fboxsep}{1pt}
+\caption{Branin --- per-level metrics, $n_{\mathrm{rep}}=10$ (seed 1; MAE/RRMSE/IS lower is better, coverage target $0.95$). Bold = best model in the row; the green highlight marks the winners of the \emph{Mean} row.}
+\label{tab:branin_hetero_nrep10}
+\begin{tabular}{llrrrrrrrrrrrrrrrr}
+\toprule
+ & & \multicolumn{4}{c}{\textbf{Separate GPs}} & \multicolumn{4}{c}{\textbf{Categorical GP}} & \multicolumn{4}{c}{\textbf{Standard LVGP}} & \multicolumn{4}{c}{\textbf{H-LVGP}} \\
+\cmidrule(lr){3-6} \cmidrule(lr){7-10} \cmidrule(lr){11-14} \cmidrule(lr){15-18}
+$n$ & Level & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.95$ & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.95$ & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.95$ & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.95$ \\
+\midrule
+\multirow{6}{*}{25} & $x_2$ = 15 & $5.902$ & $0.1174$ & $35.77$ & $0.6200$ & $4.435$ & $0.0967$ & {\boldmath$20.37$} & {\boldmath$0.9350$} & $6.136$ & $0.1679$ & $96.80$ & $0.4100$ & {\boldmath$3.339$} & {\boldmath$0.0917$} & $32.68$ & $1.000$ \\
+ & $x_2$ = 2 & $14.17$ & $0.4118$ & $162.3$ & $0.7950$ & $4.714$ & $0.1723$ & $49.29$ & {\boldmath$0.9150$} & {\boldmath$2.032$} & {\boldmath$0.0488$} & $31.46$ & $0.4300$ & $2.327$ & $0.0531$ & {\boldmath$19.96$} & $1.000$ \\
+ & $x_2$ = 8 & $7.824$ & $0.8427$ & $130.3$ & $0.8600$ & $3.366$ & $0.3004$ & {\boldmath$29.88$} & {\boldmath$1.000$} & $3.853$ & $0.3730$ & $41.36$ & $0.2900$ & {\boldmath$1.691$} & {\boldmath$0.1164$} & $30.41$ & $1.000$ \\
+ & $x_2$ = 0 & $16.19$ & $0.2789$ & $124.3$ & $0.6850$ & $6.556$ & $0.1302$ & $72.62$ & $0.8200$ & {\boldmath$3.392$} & $0.0622$ & $79.81$ & $0.3450$ & $3.565$ & {\boldmath$0.0615$} & {\boldmath$28.74$} & {\boldmath$1.000$} \\
+ & $x_2$ = 10 & $12.14$ & $0.6243$ & $174.6$ & $0.7100$ & $4.714$ & $0.2111$ & $37.07$ & {\boldmath$1.000$} & $4.247$ & $0.2297$ & $66.10$ & $0.3800$ & {\boldmath$1.847$} & {\boldmath$0.0949$} & {\boldmath$32.76$} & $1.000$ \\
+ & \textit{Mean} & $11.24$ & $0.4550$ & $125.4$ & $0.7340$ & $4.757$ & $0.1821$ & $41.85$ & \colorbox{green!20}{\boldmath$0.9340$} & $3.932$ & $0.1763$ & $63.11$ & $0.3710$ & \colorbox{green!20}{\boldmath$2.554$} & \colorbox{green!20}{\boldmath$0.0835$} & \colorbox{green!20}{\boldmath$28.91$} & $1.000$ \\
+\midrule
+\multirow{6}{*}{40} & $x_2$ = 15 & {\boldmath$0.5195$} & {\boldmath$0.0128$} & $8.882$ & {\boldmath$1.000$} & $0.8563$ & $0.0214$ & $7.364$ & $1.000$ & $0.7171$ & $0.0222$ & {\boldmath$6.774$} & $0.8400$ & $1.016$ & $0.0368$ & $30.29$ & $1.000$ \\
+ & $x_2$ = 2 & $6.850$ & $0.2434$ & $85.51$ & {\boldmath$0.9100$} & $1.591$ & $0.0525$ & {\boldmath$10.31$} & $1.000$ & $3.729$ & $0.1288$ & $92.07$ & $0.1650$ & {\boldmath$0.7563$} & {\boldmath$0.0280$} & $25.59$ & $1.000$ \\
+ & $x_2$ = 8 & $4.018$ & $0.3915$ & $38.87$ & {\boldmath$0.9050$} & {\boldmath$0.7749$} & {\boldmath$0.0480$} & {\boldmath$13.18$} & $1.000$ & $2.240$ & $0.1564$ & $27.19$ & $0.4800$ & $0.8975$ & $0.0521$ & $27.75$ & $1.000$ \\
+ & $x_2$ = 0 & $3.333$ & $0.0713$ & $40.92$ & {\boldmath$0.9000$} & $2.576$ & $0.0453$ & {\boldmath$17.40$} & $1.000$ & $2.888$ & $0.0597$ & $45.91$ & $0.3400$ & {\boldmath$1.096$} & {\boldmath$0.0212$} & $34.81$ & $1.000$ \\
+ & $x_2$ = 10 & $6.753$ & $0.2818$ & $35.39$ & {\boldmath$0.9650$} & $3.599$ & $0.1588$ & {\boldmath$22.14$} & $1.000$ & $3.958$ & $0.1764$ & $106.1$ & $0.3000$ & {\boldmath$2.984$} & {\boldmath$0.1347$} & $34.58$ & $1.000$ \\
+ & \textit{Mean} & $4.295$ & $0.2002$ & $41.91$ & \colorbox{green!20}{\boldmath$0.9360$} & $1.879$ & $0.0652$ & \colorbox{green!20}{\boldmath$14.08$} & $1.000$ & $2.706$ & $0.1087$ & $55.61$ & $0.4250$ & \colorbox{green!20}{\boldmath$1.350$} & \colorbox{green!20}{\boldmath$0.0546$} & $30.60$ & $1.000$ \\
+\bottomrule
+\end{tabular}
+\end{table}
