@@ -278,13 +278,14 @@ def _griewank6d_sigma(X, level):
     # even after 10-replicate averaging) -> RRMSE >= 1 for every model at every budget
     # (10/20/40 pts/level): a wash-out. At 0.02, levels 3-4 sit at sigma/std(f) ~ 1.33 raw,
     # ~0.42 after replicate averaging -- the same learnable regime as the 1-D problems.
-    # v3 EXPONENTIAL noise (2026-07-29, user request): the sqrt base was nearly flat over
-    # [-3,3]^5 (range 1.38x). Exponential-of-quadratic keeps the 0.02 scale at the origin
-    # (where every level's minimum sits: quiet where it matters) and reaches 0.02*e^1.35 ~
-    # 0.077 at the corners (~3.9x within-level range). log(sigma) is EXACTLY quadratic in x
-    # -> perfectly representable by the aleatoric polynomial: griewank anchors the
-    # well-specified end of the branin(step)/camel(poly-in-sigma)/griewank gradient.
-    return 0.02 * np.exp(0.03 * np.sum(X ** 2, axis=1)) * _G6_MULS[level - 1]
+    # v3.1 EXPONENTIAL RAMP in x1 (2026-07-29, user request): quietest at the x1 = -3
+    # extreme, rising monotonically to the loudest at x1 = +3 (an asymmetric ramp, not the
+    # symmetric ||x||^2 bowl of the brief v3, which also hid its range on the x1 slice).
+    # Base 0.01 * 10^((x1+3)/6): 0.01 at x1=-3 -> 0.1 at x1=+3 (10x within level); the
+    # loudest level (m=3) tops out at sigma = 0.30. log(sigma) is LINEAR in x1 -> exactly
+    # representable by the aleatoric polynomial: griewank stays the well-specified end of
+    # the branin(step)/camel(poly-in-sigma)/griewank gradient.
+    return 0.01 * np.power(10.0, (X[:, 0] + 3.0) / 6.0) * _G6_MULS[level - 1]
 
 
 _G6_FSTAR = [float(b + v * v / 4000.0 + 1.0 - np.cos(v / np.sqrt(6.0)))

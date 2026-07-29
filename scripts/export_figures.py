@@ -51,7 +51,34 @@ def griewank(fname):
         axes[1].plot(ts, sg, color=c, ls=lsty, lw=1.7, label=lab)
     axes[0].set(title="main-effect slice: true $f$ per level ($\\pm2\\sigma$ band)",
                 xlabel="$x_1$ (other dims $=0$)", ylabel="$f$")
-    axes[1].set(title="noise std on the slice", xlabel="$x_1$ (other dims $=0$)",
+    axes[1].set(title="noise std: exponential ramp in $x_1$ (quiet at $-3$, loud at $+3$)",
+                xlabel="$x_1$", ylabel="$\\sigma$")
+    for ax in axes:
+        ax.legend(fontsize=7); ax.grid(alpha=.25)
+    fig.tight_layout()
+    fig.savefig(os.path.join(OUT, fname), bbox_inches="tight")
+    plt.close(fig)
+    print("wrote", fname)
+
+
+def camel_v40(fname):
+    """Camel with the v4.0 noise (0.05 e^{(0.4x)^2} m) — the version the 30-seed campaign in
+    results_v2 was run under; latex_v2 documents that study, so its figure must match."""
+    spec = P.get("sixhump_camel")
+    xs = np.linspace(spec.lb, spec.ub, 400)
+    muls = spec.meta["noise_muls"]
+    cm = plt.cm.viridis(np.linspace(0, .9, spec.n_levels))
+    fig, axes = plt.subplots(1, 2, figsize=(10.5, 3.2))
+    for lv in spec.levels:
+        f = spec.f_true_level(xs, lv)
+        sg = 0.05 * np.exp((0.4 * xs) ** 2) * muls[lv - 1]
+        lab = f"$x_2$={spec.meta['cat_values'][lv-1]:g}"
+        axes[0].plot(xs, f, color=cm[lv-1], lw=1.6, label=lab)
+        axes[0].fill_between(xs, f-2*sg, f+2*sg, color=cm[lv-1], alpha=.15, lw=0)
+        axes[1].plot(xs, sg, color=cm[lv-1], lw=1.6, label=lab)
+    axes[0].set(title="true $f$ per level ($\\pm2\\sigma$ band, v4.0 noise)",
+                xlabel="$x_1$", ylabel="$f$")
+    axes[1].set(title="true noise std $\\sigma(x_1,\\ell)$ (v4.0)", xlabel="$x_1$",
                 ylabel="$\\sigma$")
     for ax in axes:
         ax.legend(fontsize=7); ax.grid(alpha=.25)
@@ -64,4 +91,5 @@ def griewank(fname):
 if __name__ == "__main__":
     onedim("branin_hetero", "branin_truth.pdf")
     onedim("sixhump_camel", "camel_truth.pdf")
+    camel_v40("camel_truth_v40.pdf")
     griewank("griewank_truth.pdf")
