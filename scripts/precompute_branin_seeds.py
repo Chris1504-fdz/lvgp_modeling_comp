@@ -16,7 +16,11 @@ CONFIGS = [("branin_hetero", 25), ("branin_hetero", 40),
            ("griewank_6d", 48), ("griewank_6d", 64)]
 MODELS_MATLAB = ["heter_LVGP", "standard_LVGP"]
 MODELS_PY = ["separate_gp", "categorical_kernel"]
-WORKERS = 15  # user-confirmed capacity; paired with MLVGP_LAUNCH_GAP_S=3 (6 launches/cell)
+WORKERS = 15  # user-confirmed capacity; paired with MLVGP_LAUNCH_GAP_S=3 (5-6 launches/cell).
+# 2026-07-29 incident note: a stall at 0 throughput was misdiagnosed as worker contention; the
+# real cause was MathWorks-service 5001 burst throttling (verified: a single standalone launch
+# failed identically). If the bridge prints repeated license-retry lines, STOP and give the
+# service ~15 min of quiet rather than lowering WORKERS.
 
 
 def _cell(task):

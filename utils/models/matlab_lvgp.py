@@ -130,6 +130,8 @@ def _run_matlab(call, timeout):
             shutil.rmtree(pref, ignore_errors=True); shutil.rmtree(tmp, ignore_errors=True)
         if not licensed_out:                     # real MATLAB error -> no point retrying
             break
+        print(f"[matlab_lvgp] license/MSH failure, retry {attempt + 1}/{_N_RETRY} "
+              f"({call.split('(')[0]})", flush=True)
         time.sleep(20 + 15 * attempt + random.uniform(0, 10))
     raise RuntimeError(f"MATLAB failed after retries ({call.split('(')[0]}): {last_err}")
 

@@ -15,7 +15,8 @@ MODEL_KEYS = ["separate_gp", "categorical_kernel", "standard_LVGP", "heter_LVGP"
 LABELS = {"separate_gp": "Separate GPs", "categorical_kernel": "Categorical GP",
           "standard_LVGP": "Standard LVGP", "heter_LVGP": "H-LVGP"}
 CONFIGS = [("branin_hetero", 25), ("branin_hetero", 40),
-           ("sixhump_camel", 25), ("sixhump_camel", 40)]
+           ("sixhump_camel", 25), ("sixhump_camel", 40),
+           ("griewank_6d", 48), ("griewank_6d", 64)]
 SEEDS = list(range(1, 31))
 N_REP = 10
 
