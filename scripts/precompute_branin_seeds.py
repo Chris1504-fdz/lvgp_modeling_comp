@@ -13,7 +13,8 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 SEEDS = list(range(1, 31))
 CONFIGS = [("branin_hetero", 25), ("branin_hetero", 40),
            ("sixhump_camel", 25), ("sixhump_camel", 40),
-           ("griewank_6d", 48), ("griewank_6d", 64)]
+           ("griewank_6d", 48), ("griewank_6d", 64),
+           ("griewank_6d", 80), ("griewank_6d", 120), ("griewank_6d", 160)]
 MODELS_MATLAB = ["heter_LVGP", "standard_LVGP"]
 MODELS_PY = ["separate_gp", "categorical_kernel"]
 WORKERS = 15  # user-confirmed capacity; paired with MLVGP_LAUNCH_GAP_S=3 (5-6 launches/cell).
