@@ -302,6 +302,36 @@ GRIEWANK6D = ProblemSpec(
               f_star=_G6_FSTAR[0], opt_level=1, x_star=[0.0] * 5, f_star_per_level=_G6_FSTAR),
 )
 
+# ======================================================================================
+#  TP-8  Friedman 5-D + categorical (2026-07-30, CANDIDATE -- single-seed pilot only):
+#  Friedman (1991) MARS emulation benchmark (sfu.ca "emulation & prediction" section).
+#  Levels scale the interaction amplitude a(l) and the x4 slope b(l): shape-only pairs
+#  {1,2} & {3,4}, no constant offsets (the channel an exchangeable kernel cannot express).
+#  Within-pair curve RMS 0.65/0.66 vs cross-pair 1.65-2.88 -- camel-v4 separation scale,
+#  deliberately NOT near-duplicates (camel v2.0 lesson: ultra-tight pairs reward pooling,
+#  not latent geometry). Effective order 2 -> resolvable at ~15 pts/level; budget ladder
+#  n in {40, 60, 80} keeps physical runs in the low hundreds. Noise: griewank-v3.1-style
+#  exponential ramp in x1 (10x within level); log(sigma) linear -> exactly representable.
+_FR_A = np.array([1.0, 0.85, 0.5, 0.35])
+_FR_B = np.array([1.0, 1.1, 1.5, 1.65])
+_FR_M = np.array([1.5, 1.0, 3.0, 2.0])
+
+
+def _friedman5d_f(X, level):
+    return (_FR_A[level - 1] * 10.0 * np.sin(np.pi * X[:, 0] * X[:, 1])
+            + 20.0 * (X[:, 2] - 0.5) ** 2
+            + _FR_B[level - 1] * 10.0 * X[:, 3] + 5.0 * X[:, 4])
+
+
+def _friedman5d_sigma(X, level):
+    return 0.1 * np.power(10.0, X[:, 0] - 0.5) * _FR_M[level - 1]
+
+
+FRIEDMAN5D = ProblemSpec(
+    "friedman_5d", _friedman5d_f, _friedman5d_sigma, bounds=[(0.0, 1.0)] * 5, n_levels=4,
+    meta=dict(a=_FR_A.tolist(), b=_FR_B.tolist(), noise_muls=_FR_M.tolist()),
+)
+
 
 # ======================================================================================
 #  TP-6  Ackley 10-D -- 9 continuous + 4 levels (level value v enters as x10), a=20 b=0.2 c=2pi:
@@ -467,6 +497,7 @@ PROBLEMS = {
     "ackley_2d":     ACKLEY2D,      # TP-4  (1-D, 4 levels)
     "griewank_10d":  GRIEWANK10D,             # TP-5  (9-D, 4 levels) LIVE
     "griewank_6d":   GRIEWANK6D,              # TP-5b (5-D, 4 levels) LIVE -- 6-D rescale of TP-5
+    "friedman_5d":   FRIEDMAN5D,              # TP-8  (5-D, 4 levels) CANDIDATE pilot
     "ackley_10d":    ACKLEY10D,                # TP-6  (9-D, 4 levels) LIVE
     "rastrigin_6d":  RASTRIGIN6D,              # TP-7  (5-D, 4 levels) LIVE
     "golinski":      GOLINSKI,                 # ENG-1 (6-D, 5 levels) LIVE

@@ -11,7 +11,7 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CSV = os.path.join(HERE, "results_v2", "seed_summary.csv")
 
 DISP = {"branin_hetero": "Branin", "sixhump_camel": "Six-hump camel",
-        "griewank_6d": "Griewank 6-D"}
+        "griewank_6d": "Griewank 6-D", "friedman_5d": "Friedman 5-D"}
 SETS = [("", ["Separate GPs", "Categorical GP", "Standard LVGP", "H-LVGP"]),
         ("_nocat", ["Separate GPs", "Standard LVGP", "H-LVGP"])]
 METRICS = ["MAE", "RRMSE", "IS", "Coverage"]

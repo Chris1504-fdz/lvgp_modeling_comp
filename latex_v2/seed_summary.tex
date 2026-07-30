@@ -28,7 +28,17 @@ Problem & $n$ & Model & MAE & RRMSE & IS & Coverage \\
  &  & Standard LVGP & $0.145 \pm 0.034$ & $0.212 \pm 0.066$ & $3.240 \pm 1.092$ & $0.324 \pm 0.106$ \\
  &  & H-LVGP & $0.143 \pm 0.024$ & $0.226 \pm 0.042$ & $1.147 \pm 0.318$ & \colorbox{green!20}{\boldmath$0.953 \pm 0.029$} \\
 \midrule
-\multirow{12}{*}{Griewank 6-D} & \multirow{4}{*}{80} & Separate GPs & $0.071 \pm 0.002$ & $1.016 \pm 0.040$ & $0.730 \pm 0.028$ & $0.871 \pm 0.010$ \\
+\multirow{20}{*}{Griewank 6-D} & \multirow{4}{*}{48} & Separate GPs & $0.076 \pm 0.003$ & $1.086 \pm 0.036$ & $0.833 \pm 0.034$ & $0.861 \pm 0.014$ \\
+ &  & Categorical GP & \colorbox{green!20}{\boldmath$0.066 \pm 0.003$} & \colorbox{green!20}{\boldmath$0.939 \pm 0.048$} & \colorbox{green!20}{\boldmath$0.695 \pm 0.027$} & \colorbox{green!20}{\boldmath$0.893 \pm 0.015$} \\
+ &  & Standard LVGP & $0.104 \pm 0.009$ & $1.376 \pm 0.134$ & $1.385 \pm 0.193$ & $0.716 \pm 0.052$ \\
+ &  & H-LVGP & $0.097 \pm 0.007$ & $1.242 \pm 0.169$ & $0.939 \pm 0.070$ & $0.845 \pm 0.021$ \\
+\cmidrule(lr){2-7}
+ & \multirow{4}{*}{64} & Separate GPs & $0.066 \pm 0.002$ & $0.973 \pm 0.025$ & $0.773 \pm 0.031$ & $0.882 \pm 0.010$ \\
+ &  & Categorical GP & \colorbox{green!20}{\boldmath$0.064 \pm 0.003$} & \colorbox{green!20}{\boldmath$0.896 \pm 0.041$} & \colorbox{green!20}{\boldmath$0.748 \pm 0.022$} & \colorbox{green!20}{\boldmath$0.912 \pm 0.008$} \\
+ &  & Standard LVGP & $0.086 \pm 0.012$ & $1.210 \pm 0.168$ & $1.203 \pm 0.273$ & $0.736 \pm 0.043$ \\
+ &  & H-LVGP & $0.084 \pm 0.026$ & $1.141 \pm 0.321$ & $0.916 \pm 0.226$ & $0.876 \pm 0.029$ \\
+\cmidrule(lr){2-7}
+ & \multirow{4}{*}{80} & Separate GPs & $0.071 \pm 0.002$ & $1.016 \pm 0.040$ & $0.730 \pm 0.028$ & $0.871 \pm 0.010$ \\
  &  & Categorical GP & \colorbox{green!20}{\boldmath$0.061 \pm 0.003$} & \colorbox{green!20}{\boldmath$0.986 \pm 0.046$} & \colorbox{green!20}{\boldmath$0.723 \pm 0.024$} & \colorbox{green!20}{\boldmath$0.887 \pm 0.009$} \\
  &  & Standard LVGP & $0.100 \pm 0.010$ & $1.359 \pm 0.145$ & $1.084 \pm 0.228$ & $0.820 \pm 0.047$ \\
  &  & H-LVGP & $0.082 \pm 0.015$ & $1.133 \pm 0.277$ & $0.950 \pm 0.089$ & $0.836 \pm 0.047$ \\

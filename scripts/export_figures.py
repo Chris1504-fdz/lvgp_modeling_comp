@@ -88,8 +88,34 @@ def camel_v40(fname):
     print("wrote", fname)
 
 
+def friedman(fname):
+    spec = P.get("friedman_5d")
+    a, b, m = spec.meta["a"], spec.meta["b"], spec.meta["noise_muls"]
+    ts = np.linspace(0, 1, 300)
+    XS = np.full((len(ts), 5), 0.5); XS[:, 0] = ts; XS[:, 1] = 0.7
+    COL = {1: "C0", 2: "C1", 3: "C3", 4: "C2"}
+    fig, axes = plt.subplots(1, 2, figsize=(10.5, 3.2))
+    for lv in spec.levels:
+        f = spec.f_true_level(XS, lv); sg = np.ravel(spec.sigma_level(XS, lv))
+        lab = f"lv {lv} ($a$={a[lv-1]:g}, $b$={b[lv-1]:g})"
+        axes[0].plot(ts, f, color=COL[lv], lw=1.7, label=lab)
+        axes[0].fill_between(ts, f-2*sg, f+2*sg, color=COL[lv], alpha=.12, lw=0)
+        axes[1].plot(ts, sg, color=COL[lv], lw=1.7, label=f"lv {lv} (m={m[lv-1]:g})")
+    axes[0].set(title="slice $x_2{=}0.7$, others $0.5$ ($\\pm2\\sigma$ band)",
+                xlabel="$x_1$", ylabel="$f$")
+    axes[1].set(title="noise std: exponential ramp in $x_1$ (10x within level)",
+                xlabel="$x_1$", ylabel="$\\sigma$")
+    for ax in axes:
+        ax.legend(fontsize=7); ax.grid(alpha=.25)
+    fig.tight_layout()
+    fig.savefig(os.path.join(OUT, fname), bbox_inches="tight")
+    plt.close(fig)
+    print("wrote", fname)
+
+
 if __name__ == "__main__":
     onedim("branin_hetero", "branin_truth.pdf")
     onedim("sixhump_camel", "camel_truth.pdf")
     camel_v40("camel_truth_v40.pdf")
     griewank("griewank_truth.pdf")
+    friedman("friedman_truth.pdf")

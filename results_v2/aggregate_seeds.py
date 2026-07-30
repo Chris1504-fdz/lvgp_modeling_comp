@@ -16,7 +16,9 @@ LABELS = {"separate_gp": "Separate GPs", "categorical_kernel": "Categorical GP",
           "standard_LVGP": "Standard LVGP", "heter_LVGP": "H-LVGP"}
 CONFIGS = [("branin_hetero", 25), ("branin_hetero", 40),
            ("sixhump_camel", 25), ("sixhump_camel", 40),
-           ("griewank_6d", 80), ("griewank_6d", 120), ("griewank_6d", 160)]
+           ("griewank_6d", 48), ("griewank_6d", 64),
+           ("griewank_6d", 80), ("griewank_6d", 120), ("griewank_6d", 160),
+           ("friedman_5d", 40), ("friedman_5d", 60), ("friedman_5d", 80)]
 SEEDS = list(range(1, 31))
 N_REP = 10
 
