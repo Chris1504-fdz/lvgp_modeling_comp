@@ -60,7 +60,8 @@ def _cache_path(problem, model, seed, n_rep, n_init=None, design_seed=None):
         return os.path.join(CACHE_ROOT, problem,
                             f"{model}_seed{seed:02d}_nrep{n_rep:02d}{tag}.npz")
     fd = f"_fd{int(design_seed):02d}"
-    return os.path.join(CACHE_ROOT_V2, problem, model,
+    n_val = int(n_init) if n_init is not None else P.get(problem).n_init
+    return os.path.join(CACHE_ROOT_V2, problem, model, f"n{n_val:03d}",
                         f"{model}_seed{seed:02d}_nrep{n_rep:02d}{tag}{fd}.npz")
 
 
