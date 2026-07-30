@@ -103,15 +103,21 @@ def per_level_table(prob, disp, budgets, n_rep, keys, sfx):
     return "\n".join(L) + "\n"
 
 
-def summary_table(keys, sfx):
+PROB_GROUPS = [("", "1-D problems", ["branin_hetero", "sixhump_camel"]),
+               ("_hd", "high-dimensional problems", ["griewank_6d", "friedman_5d"])]
+
+
+def summary_table(keys, sfx, grp_sfx="", grp_probs=None, grp_name=""):
     models = [LABELS[k] for k in keys]
+    probs = [pr for pr in PROBLEMS if grp_probs is None or pr[0] in grp_probs]
     note = "" if not sfx else " (without the Categorical GP)"
     L = [r"\begin{table}[htbp]", r"\centering", r"\small",
          r"\setlength{\tabcolsep}{3.5pt}", r"\setlength{\fboxsep}{1.5pt}",
-         r"\caption{Mean-over-levels metrics for every problem $\times$ budget $\times$ model%s"
+         r"\caption{Mean-over-levels metrics, %s: problem $\times$ budget $\times$ model%s"
          r" (seed %d). Bold on green = best model in each (problem, budget, $n_{\mathrm{rep}}$)"
-         r" block per metric (MAE/RRMSE/IS: lower; coverage: closest to $0.95$).}" % (note, SEED),
-         r"\label{tab:summary%s}" % sfx,
+         r" block per metric (MAE/RRMSE/IS: lower; coverage: closest to $0.95$).}"
+         % (grp_name or "all problems", note, SEED),
+         r"\label{tab:summary%s%s}" % (grp_sfx, sfx),
          r"\begin{tabular}{lll%s}" % ("rrrr" * len(N_REPS)), r"\toprule",
          r" & & & " + " & ".join(r"\multicolumn{4}{c}{$n_{\mathrm{rep}}=%d$}" % nr
                                  for nr in N_REPS) + r" \\",
@@ -119,7 +125,7 @@ def summary_table(keys, sfx):
          r"Problem & $n$ & Model & " + " & ".join(" & ".join(ARROWS[m] for m in METRICS)
                                                   for _ in N_REPS) + r" \\",
          r"\midrule"]
-    for pi, (prob, disp, budgets) in enumerate(PROBLEMS):
+    for pi, (prob, disp, budgets) in enumerate(probs):
         nrow_p = len(budgets) * len(models)
         first_p = True
         for bi, (n_init, n_shown) in enumerate(budgets):
@@ -137,7 +143,7 @@ def summary_table(keys, sfx):
                 L.append(" & ".join(row) + r" \\")
             if bi < len(budgets) - 1:
                 L.append(r"\cmidrule(lr){2-%d}" % (3 + 4 * len(N_REPS)))
-        L.append(r"\bottomrule" if pi == len(PROBLEMS) - 1 else r"\midrule")
+        L.append(r"\bottomrule" if pi == len(probs) - 1 else r"\midrule")
     L += [r"\end{tabular}", r"\end{table}"]
     return "\n".join(L) + "\n"
 
@@ -150,9 +156,10 @@ def wrapper():
                  "\\clearpage\n\\section*{Version 2 --- without the Categorical GP}")
         inputs.append(title)
         inputs.append("\\input{summary%s.tex}\n\\clearpage" % sfx)
+        inputs.append("\\input{summary_hd%s.tex}\n\\clearpage" % sfx)
         if not sfx:
             inputs.append("\\input{conclusions.tex}\n\\clearpage")
-            for sf in ["", "_nocat"]:
+            for sf in ["", "_hd", "_nocat", "_hd_nocat"]:
                 if os.path.exists(os.path.join(OUT, f"seed_summary{sf}.tex")):
                     inputs.append("\\input{seed_summary%s.tex}\n\\clearpage" % sf)
         for prob, _, _ in PROBLEMS:
@@ -186,7 +193,9 @@ Single seed.
 
 def main():
     for sfx, keys in SETS:
-        open(os.path.join(OUT, f"summary{sfx}.tex"), "w").write(summary_table(keys, sfx))
+        for grp_sfx, grp_name, grp_probs in PROB_GROUPS:
+            open(os.path.join(OUT, f"summary{grp_sfx}{sfx}.tex"), "w").write(
+                summary_table(keys, sfx, grp_sfx, grp_probs, grp_name))
         print(f"summary{sfx}.tex", flush=True)
         for prob, disp, budgets in PROBLEMS:
             for nr in N_REPS:
@@ -243,7 +252,7 @@ def github_variant():
         shutil.copy2(os.path.join(OUT, "figs", f), os.path.join(figs, f))
     # GitHub version carries ONLY the multi-seed tables (user request 2026-07-29):
     # single-seed tables (summary + per-level) stay in the internal latex/ report.
-    table_files = [f"seed_summary{sf}.tex" for sf in ["", "_nocat"]
+    table_files = [f"seed_summary{sf}.tex" for sf in ["", "_hd", "_nocat", "_hd_nocat"]
                    if os.path.exists(os.path.join(OUT, f"seed_summary{sf}.tex"))]
     for f in table_files:
         shutil.copy2(os.path.join(OUT, f), os.path.join(GITHUB_OUT, f))
