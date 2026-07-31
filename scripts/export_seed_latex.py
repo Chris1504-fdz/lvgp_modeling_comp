@@ -16,8 +16,9 @@ DISP = {"branin_hetero": "Branin", "sixhump_camel": "Six-hump camel",
 GROUPS = [("", "1-D problems", ["branin_hetero", "sixhump_camel"]),
           ("_hd", "high-dimensional problems", ["griewank_6d", "friedman_5d"])]
 SETS = [("", ["Separate GPs", "Categorical GP", "Standard LVGP", "H-LVGP",
-              "H-LVGP (torch)"]),
-        ("_nocat", ["Separate GPs", "Standard LVGP", "H-LVGP", "H-LVGP (torch)"])]
+              "H-LVGP (torch)", "H-LVGP (torch-mix)"]),
+        ("_nocat", ["Separate GPs", "Standard LVGP", "H-LVGP", "H-LVGP (torch)",
+                    "H-LVGP (torch-mix)"])]
 METRICS = ["MAE", "RRMSE", "IS", "Coverage"]
 
 

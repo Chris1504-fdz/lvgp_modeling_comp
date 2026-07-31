@@ -6,7 +6,8 @@ Two registry models:
   LVGPTorch      -- "lvgp_torch": homoscedastic, fits the replicate MEAN only, noise-BLIND
                     acquisitions (the pytorch analogue of standard_LVGP; nugget inferred).
   HeterLVGPTorch -- "heter_lvgp_torch": heteroscedastic, replicate variances as FIXED observation
-                    noise + the shared aleatoric poly r(x) (the analogue of heter_LVGP).
+                    noise + the MATLAB-parity pooled aleatoric poly over [x, z] (_MatlabAleatoric
+                    fed the torch latents; matches heter_LVGP's noise model since 2026-07-30).
 
 FIT PROTOCOL: COLD multi-start MAP fit (COLD_RESTARTS scipy restarts) at EVERY iteration --
 protocol-matched to every other model in the benchmark (MATLAB LVGP re-multistarts each iteration;
@@ -27,6 +28,7 @@ from gpytorch.likelihoods import FixedNoiseGaussianLikelihood
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from .base import BaseModel, AleatoricModels, _as_2d
+from .hetero_lvgp_native import _MatlabAleatoric
 
 DTYPE = torch.float64
 COLD_RESTARTS = 2
@@ -71,6 +73,7 @@ def _load_matching(model, ref_state):
 class _LVGPTorchBase(BaseModel):
     ENGINE = "python"
     HETERO = False
+    MODEL_CLS = LVGPR                 # subclass hook (lvgp_torch_mixed.LVGPRMixed)
 
     def __init__(self, model, levels, bounds, ale, n_fits):
         self.model = model
@@ -85,9 +88,9 @@ class _LVGPTorchBase(BaseModel):
             raise ValueError("lvgp_torch models need bounds= (bo.run_bo passes spec.bounds)")
         Xn, y, v, d = _stack(data_by_level, bounds)
         tx = torch.tensor(Xn, dtype=DTYPE); ty = torch.tensor(y, dtype=DTYPE)
-        m = LVGPR(train_x=tx, train_y=ty, qual_index=[d], quant_index=list(range(d)),
-                  num_levels_per_var=[len(data_by_level)], lv_dim=2,
-                  noise=NUGGET, lb_noise=NUGGET).double()   # homoscedastic nugget floor (see NUGGET)
+        m = cls.MODEL_CLS(train_x=tx, train_y=ty, qual_index=[d], quant_index=list(range(d)),
+                          num_levels_per_var=[len(data_by_level)], lv_dim=2,
+                          noise=NUGGET, lb_noise=NUGGET).double()  # homoscedastic nugget floor (see NUGGET)
         if cls.HETERO:                                  # replicate variances as FIXED observation noise.
             ys2 = float(m.y_std) ** 2                    # LVGPR standardizes train_y internally, so the
             m.likelihood = FixedNoiseGaussianLikelihood(  # noise VARIANCE must be in standardized units,
@@ -112,7 +115,28 @@ class _LVGPTorchBase(BaseModel):
         else:
             fit_model_scipy(m, num_restarts=COLD_RESTARTS)
         m.eval()
-        ale = AleatoricModels.fit(data_by_level) if needs_r else None
+        ale = None
+        if needs_r:
+            if cls.HETERO:
+                # MATLAB-parity aleatoric (2026-07-30, user request): the pooled degree-2 ridge
+                # poly over [x_cont, z(level)] WITH cross terms (_MatlabAleatoric), fed the
+                # torch model's own fitted latents -- replacing the per-category continuous-only
+                # poly, which reconstructed the noise far worse at low pts/level (friedman n=40
+                # nMAE 0.93 vs MATLAB's 0.42). Raw-units X in fit AND predict (the poly
+                # standardizes internally).
+                levels = sorted(int(lv) for lv in data_by_level)
+                lv_index = {lv: i for i, lv in enumerate(levels)}
+                z_mat = m.lv_mapping_layers[0].latents.detach().cpu().numpy().reshape(
+                    len(levels), -1)
+                X_cont = np.vstack([_as_2d(data_by_level[lv]["X"]) for lv in levels])
+                codes = np.concatenate(
+                    [np.full(len(_as_2d(data_by_level[lv]["X"])), i, dtype=int)
+                     for i, lv in enumerate(levels)])
+                v_all = np.concatenate(
+                    [np.asarray(data_by_level[lv]["y_var"], float).ravel() for lv in levels])
+                ale = _MatlabAleatoric(X_cont, codes, v_all, z_mat, lv_index)
+            else:
+                ale = AleatoricModels.fit(data_by_level)
         return cls(m, sorted(int(lv) for lv in data_by_level), bounds, ale, n_fits + 1)
 
     def _encode(self, level, x_new):

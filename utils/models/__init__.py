@@ -56,6 +56,10 @@ try:
                                      label="LVGP (torch)", aux=True)
     MODELS["heter_lvgp_torch"] = ModelInfo("heter_lvgp_torch", "python", FULL,
                                            cls=HeterLVGPTorch, label="Hetero LVGP (torch)", aux=True)
+    from .lvgp_torch_mixed import HeterLVGPTorchMixed
+    MODELS["heter_lvgp_torch_mixed"] = ModelInfo(
+        "heter_lvgp_torch_mixed", "python", FULL, cls=HeterLVGPTorchMixed,
+        label="Hetero LVGP (torch, mixed kernel)", aux=True)
 except ImportError:
     pass
 
