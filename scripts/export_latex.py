@@ -232,13 +232,13 @@ $$\sigma(x_1,\ell)=0.05\,e^{(0.4x_1)^2}\,m(\ell),\quad m(\ell)\in\{2.0,3.5,1.5,5
 (noise as used in the 30-seed replication tables below)
 \begin{center}\includegraphics[width=0.85\linewidth]{figs/camel_truth_v40.pdf}\end{center}
 
-\subsection*{Griewank 6-D (level-shifted pairs)}
-$$f(\mathbf{x}_q,\ell)=\sum_{i=1}^{6}\tfrac{xs_i^2}{4000}-\prod_{i=1}^{6}\cos\big(\tfrac{xs_i}{\sqrt i}\big)+1+b(\ell),
-\quad xs=[\mathbf{x}_q, v(\ell)],\ \mathbf{x}_q\in[-3,3]^5$$
-$$v(\ell)\in\{0.5,1.3,2.7,3.1\},\quad b(\ell)\in\{0,0.15,0.6,0.75\},\quad
-\sigma(\mathbf{x}_q,\ell)=0.01\cdot 10^{(x_1+3)/6}\;m(\ell),\quad
+\subsection*{Friedman 5-D + categorical (shape-only level pairs)}
+$$f_\ell(\mathbf{x})=a(\ell)\cdot 10\sin(\pi x_1 x_2)+20(x_3-0.5)^2+b(\ell)\cdot 10x_4+5x_5,
+\quad \mathbf{x}\in[0,1]^5$$
+$$a(\ell)\in\{1.0,0.85,0.5,0.35\},\quad b(\ell)\in\{1.0,1.1,1.5,1.65\},\quad
+\sigma(\mathbf{x},\ell)=0.1\cdot 10^{\,x_1-0.5}\;m(\ell),\quad
 m(\ell)\in\{1.5,1.0,3.0,2.0\}$$
-\begin{center}\includegraphics[width=0.85\linewidth]{figs/griewank_truth.pdf}\end{center}
+\begin{center}\includegraphics[width=0.85\linewidth]{figs/friedman_truth.pdf}\end{center}
 \clearpage
 """
 
@@ -248,14 +248,14 @@ def github_variant():
     os.makedirs(GITHUB_OUT, exist_ok=True)
     figs = os.path.join(GITHUB_OUT, "figs")
     os.makedirs(figs, exist_ok=True)
-    for f in ["branin_truth.pdf", "camel_truth_v40.pdf", "griewank_truth.pdf"]:
+    for f in ["branin_truth.pdf", "camel_truth_v40.pdf", "friedman_truth.pdf"]:
         shutil.copy2(os.path.join(OUT, "figs", f), os.path.join(figs, f))
     # GitHub version carries ONLY the multi-seed tables (user request 2026-07-29):
     # single-seed tables (summary + per-level) stay in the internal latex/ report.
-    table_files = [f"seed_summary{sf}.tex" for sf in ["", "_hd", "_nocat", "_hd_nocat"]
-                   if os.path.exists(os.path.join(OUT, f"seed_summary{sf}.tex"))]
-    for f in table_files:
-        shutil.copy2(os.path.join(OUT, f), os.path.join(GITHUB_OUT, f))
+    # seed tables are written DIRECTLY to latex_v2 by export_seed_latex.py with the concise
+    # scope (branin+camel+friedman merged) -- do NOT copy latex/'s full-report versions over them
+    table_files = [f"seed_summary{sf}.tex" for sf in ["", "_nocat"]
+                   if os.path.exists(os.path.join(GITHUB_OUT, f"seed_summary{sf}.tex"))]
     open(os.path.join(GITHUB_OUT, "problems_def.tex"), "w").write(PROBLEM_DEFS)
     body = "\n".join(["\\input{problems_def.tex}"]
                      + [f"\\input{{{f}}}" for f in table_files])

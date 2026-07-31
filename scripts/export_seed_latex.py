@@ -15,8 +15,9 @@ DISP = {"branin_hetero": "Branin", "sixhump_camel": "Six-hump camel",
 # split across two float tables so neither overflows the landscape page
 GROUPS = [("", "1-D problems", ["branin_hetero", "sixhump_camel"]),
           ("_hd", "high-dimensional problems", ["griewank_6d", "friedman_5d"])]
-SETS = [("", ["Separate GPs", "Categorical GP", "Standard LVGP", "H-LVGP"]),
-        ("_nocat", ["Separate GPs", "Standard LVGP", "H-LVGP"])]
+SETS = [("", ["Separate GPs", "Categorical GP", "Standard LVGP", "H-LVGP",
+              "H-LVGP (torch)"]),
+        ("_nocat", ["Separate GPs", "Standard LVGP", "H-LVGP", "H-LVGP (torch)"])]
 METRICS = ["MAE", "RRMSE", "IS", "Coverage"]
 
 
@@ -34,7 +35,7 @@ def cell(mean, std, win):
 def build(model_order, sfx, grp_sfx, grp_name, grp_probs):
     df = pd.read_csv(CSV, header=[0, 1], index_col=[0, 1, 2])
     probs = [p for p in grp_probs if p in df.index.get_level_values(0)]
-    note = " Without the Categorical GP (3-model comparison; winners recomputed)." if sfx else ""
+    note = " Without the Categorical GP (winners recomputed)." if sfx else ""
     lines = [
         r"\begin{table}[htbp]", r"\centering", r"\small",
         r"\setlength{\tabcolsep}{3pt}",
@@ -74,16 +75,23 @@ def build(model_order, sfx, grp_sfx, grp_name, grp_probs):
     return "\n".join(lines) + "\n"
 
 
+# latex_v2 (concise GitHub doc): ONE merged table per variant, Friedman instead of griewank
+V2_PROBS = ["branin_hetero", "sixhump_camel", "friedman_5d"]
+
+
 def main():
     for sfx, model_order in SETS:
-        for grp_sfx, grp_name, grp_probs in GROUPS:
+        for grp_sfx, grp_name, grp_probs in GROUPS:          # latex/ (full report): split tables
             tex = build(model_order, sfx, grp_sfx, grp_name, grp_probs)
-            for sub in ("latex", "latex_v2"):
-                out = os.path.join(HERE, sub, f"seed_summary{grp_sfx}{sfx}.tex")
-                if os.path.isdir(os.path.dirname(out)):
-                    with open(out, "w") as fh:
-                        fh.write(tex)
-                    print("wrote", out)
+            out = os.path.join(HERE, "latex", f"seed_summary{grp_sfx}{sfx}.tex")
+            with open(out, "w") as fh:
+                fh.write(tex)
+            print("wrote", out)
+        tex = build(model_order, sfx, "", "all problems", V2_PROBS)
+        out = os.path.join(HERE, "latex_v2", f"seed_summary{sfx}.tex")
+        with open(out, "w") as fh:
+            fh.write(tex)
+        print("wrote", out)
 
 
 if __name__ == "__main__":

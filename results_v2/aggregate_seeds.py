@@ -11,9 +11,11 @@ import pandas as pd
 from utils import problems as P, study, metrics as MET
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-MODEL_KEYS = ["separate_gp", "categorical_kernel", "standard_LVGP", "heter_LVGP"]
+MODEL_KEYS = ["separate_gp", "categorical_kernel", "standard_LVGP", "heter_LVGP",
+              "heter_lvgp_torch"]
 LABELS = {"separate_gp": "Separate GPs", "categorical_kernel": "Categorical GP",
-          "standard_LVGP": "Standard LVGP", "heter_LVGP": "H-LVGP"}
+          "standard_LVGP": "Standard LVGP", "heter_LVGP": "H-LVGP",
+          "heter_lvgp_torch": "H-LVGP (torch)"}
 CONFIGS = [("branin_hetero", 25), ("branin_hetero", 40),
            ("sixhump_camel", 25), ("sixhump_camel", 40),
            ("griewank_6d", 48), ("griewank_6d", 64),
