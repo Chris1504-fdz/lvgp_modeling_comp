@@ -1,0 +1,97 @@
+\section*{Conclusions (preliminary --- seed 1, $n_{\mathrm{rep}}=10$)}
+
+\textbf{Status.} Problem versions: Branin v2 (region-contrast noise), camel v4
+(5 levels: two pairs + a middle bridge), Griewank 6-D v3.1 (level-shifted pairs, tamed domain
+$[-3,3]^5$, exponential-ramp noise $0.01\cdot10^{(x_1+3)/6}m(\ell)$ --- quiet at $x_1=-3$, up
+to $\sigma=0.30$ at $+3$). All three problems now carry a 30-seed fixed-design replication
+(Table~\ref{tab:seeds}); Griewank uses the budget ladder 20/30/40 pts/level
+($n\in\{80,120,160\}$). \emph{Camel version caveat:} the 30-seed camel tables use the v4.0
+noise $0.05e^{(0.4x_1)^2}m(\ell)$; the single-seed camel tables use the current v4.3
+polynomial $(0.04+0.05x_1+0.06x_1^2)m(\ell)$ --- a design exploration that left the model
+ranking essentially unchanged (noise treatment buys calibration, not mean accuracy).
+
+\begin{enumerate}
+\item \textbf{Cross-level information sharing dominates at these budgets.} The Separate GPs
+trail on accuracy in every configuration (roughly 2--4$\times$ the best MAE on the 1-D
+problems); their honest, wide intervals score well only on pure-calibration metrics.
+
+\item \textbf{Branin v2, with 30-seed error bars: the H-LVGP's $n=25$ accuracy win is robust;
+its $n=40$ lead was a seed-1 artifact.} At $n=25$ the H-LVGP dominates accuracy across noise
+realizations (MAE $2.52 \pm 0.72$ vs Categorical GP $4.53 \pm 0.24$) with coverage 1.00; the
+Categorical GP posts the study's best-calibrated result there (coverage $0.9455 \pm 0.010$). At
+$n=40$ the means converge ($1.59 \pm 0.27$ vs $1.72 \pm 0.42$, medians tied) and the
+Categorical GP clearly wins IS (14.9 vs 35.6).
+
+\item \textbf{The camel arc: falsified hypothesis, synthesis, then tempered by replication.}
+The design sequence (v2.0 tight pairs $\to$ v2.1 widened $\to$ v3 hierarchy $\to$ v4 five
+levels) first suggested the latent needs $\geq$5 structured levels and $\geq$8 pts/level to
+pay (seed 1's v4 $n=40$: H-LVGP 0.074 vs 0.101). \textbf{The 30-seed replication shows that
+was a favorable draw}: over noise realizations the Categorical GP leads camel accuracy at both
+budgets ($n=40$: $0.114 \pm 0.010$ vs $0.143 \pm 0.024$) while the \textbf{H-LVGP is the
+best-calibrated model} (coverage $0.953 \pm 0.029$). Revised synthesis: at camel-scale level
+separation the latent buys \emph{calibration}, not accuracy; Branin-scale separation ($n=25$)
+is where it buys both.
+
+\item \textbf{The standard LVGP's intervals are unusable everywhere} --- coverage 0.22--0.78
+against the 0.95 target (camel v3 $n=32$: 0.290, NLL 3351), the worst miscalibration areas,
+and NLL up to thousands vs $O(1)$ for every other model. Its posterior mean is often
+competitive --- the deficiency is purely the noise-blind uncertainty.
+
+\item \textbf{Noise-surface recovery shows the polynomial aleatoric models' structural
+limits.} Branin v2's sigmoid step is outside both polynomial families (nMAE 0.25--0.33; the
+pooled $[x,z]$ polynomial's usual advantage vanishes), while on smooth noise the pooled version
+wins. When under-determined (36 coefficients vs 20--32 points) the pooled polynomial explodes
+out-of-sample (nMAE up to $\approx$1300); once over-determined it recovers the noise surface
+well.
+
+\item \textbf{Griewank 6-D: offset differences favor the exchangeable kernel; shape
+differences favor the latent.} Isolation experiments identified the surface as the original
+bottleneck (budget ladder and noise rescale left RRMSE unchanged; the $[-3,3]^5$ domain fix
+made it learnable). The v2 redesign added TP-7-style per-level offsets $b(\ell)$ to separate
+the levels --- and flipped every budget to the Categorical GP. Mechanism: the LVGP's single
+constant mean forces pure offsets through the latent distances, sacrificing cross-level
+shape-sharing. \textbf{The 30-seed budget ladder (v3.1 ramp noise, 20/30/40 pts/level)
+localizes the resolution threshold and exposes an H-LVGP pathology.} The Categorical GP
+crosses the mean-prediction ceiling already at 30/level (RRMSE $0.75\pm0.02$; $0.70\pm0.05$
+at 40/level, MAE $0.0474\pm0.003$) and sweeps every budget; the Separate GPs follow
+($0.90/0.85$); the standard LVGP stays at the ceiling until 40/level ($1.05$). \textbf{The
+H-LVGP's posterior mean degrades monotonically with $n$} --- MAE $0.082\to0.111\to0.137$,
+RRMSE $1.13\to1.56\to2.09$ (median 2.15 at $n=160$: the whole seed distribution, not outlier
+draws) --- while its coverage stays acceptable (0.84--0.93) through inflated intervals. Every
+other model improves with data; the heteroscedastic machinery itself is implicated. This is
+the study's most actionable finding for the H-LVGP codebase and deserves a dedicated
+investigation (conditioning of the replicate-variance-in-correlation formulation at larger
+$n$ is the prime suspect). No model reaches the 0.95 coverage target on griewank.
+
+\item \textbf{Noise-awareness buys \emph{reproducibility} of calibration, not just its
+level.} Across every replicated configuration the H-LVGP's coverage band is on-target
+\emph{and} tight across noise realizations (seed-std 0.008--0.047), while the standard LVGP's
+calibration is erratic as well as biased: coverage seed-std 0.04--0.15, up to $18\times$
+larger (branin $n=40$: $\pm0.145$ vs $\pm0.008$) --- which side of 0.5 its coverage lands on
+depends on the noise draw. Its IS spread is likewise $1.5$--$3\times$ the H-LVGP's on camel
+and griewank. Mechanism: replicate-variance-informed intervals adapt to each realization; a
+single MLE nugget re-absorbs whatever the draw looked like, making calibration a lottery.
+Scope: the Separate GPs' band is equally tight ($\pm$0.01--0.03) but off-target --- the
+H-LVGP is the only model both centered and stable; and the stability does \emph{not} extend
+to its posterior mean (next item).
+
+\item \textbf{The LVGPs are 2--8$\times$ less stable run-to-run than the python GPs} ---
+seed-to-seed std across every replicated configuration (Branin $n=25$ MAE: H-LVGP $\pm$0.72,
+standard $\pm$1.06 vs CatGP $\pm$0.24; Griewank $n=160$: H-LVGP $\pm$0.027 vs CatGP
+$\pm$0.003): pure-MLE multistart variance vs prior-regularized fitting. Single-fit LVGP
+results carry real refit risk.
+\end{enumerate}
+
+\noindent\textbf{Practical recommendations.}\\[2pt]
+\begin{tabular}{p{0.42\linewidth}p{0.52\linewidth}}
+\toprule
+regime & recommended model \\
+\midrule
+many well-separated levels, strong structure (Branin-like), $\geq$5 pts/level & \textbf{H-LVGP} (best accuracy + calibrated intervals) \\
+few ($\leq$4) moderately structured levels, or $\leq$5 pts/level & \textbf{Categorical GP} (the latent needs $\geq$5 levels AND $\geq$8 pts/level to pay --- camel v4, Branin) \\
+intervals used downstream & never the standard LVGP alone \\
+levels differing mainly by constant offsets & \textbf{Categorical GP} (the constant-mean LVGP pays for offsets in latent distance --- Griewank v2/v3.1) \\
+signal variation at/below the resolvable limit & fix the problem (scaling, domain, or function) first \\
+high-$n$ heteroscedastic fits with the current H-LVGP & audit first --- its mean degrades with $n$ on Griewank (conclusion 6) \\
+\bottomrule
+\end{tabular}

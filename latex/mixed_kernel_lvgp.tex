@@ -1,0 +1,391 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage[dvipsnames]{xcolor}
+
+\title{The Mixed-Kernel H-LVGP (\texttt{heter\_lvgp\_torch\_mixed}):\\
+a adaptation of botorch's \texttt{MixedSingleTaskGP} kernel algebra\\
+to the latent-variable GP}
+\author{lvgp\_modeling\_study --- implementation note}
+\date{2026-07-31}
+
+\begin{document}
+\maketitle
+
+\section{Motivation (what the 30-seed study showed)}
+
+Across the study's replicated benchmarks the Categorical GP (botorch
+\texttt{MixedSingleTaskGP}) beat the latent-variable H-LVGP in most configurations. Two
+structural mechanisms were isolated:
+\begin{enumerate}
+\item \textbf{The offset tax.} The LVGP has a single product kernel and one constant mean, so
+a pure between-level offset can only be encoded by pushing latent vectors apart --- which
+decays the correlation for \emph{everything}, offsets and shape alike (demonstrated by the
+Griewank $b(\ell)$ redesign, which flipped every budget to the Categorical GP).
+\item \textbf{The additive channel.} botorch's mixed kernel contains an \emph{additive}
+categorical component, equivalent to a per-level random-effect offset $h(\ell)$ carried in the
+covariance: $f(x,\ell)=g(x)+h(\ell)+\text{interaction}$. This absorbs offsets at the cost of a
+single outputscale.
+\end{enumerate}
+The mixed-kernel H-LVGP grafts botorch's kernel algebra onto the LVGP: the latent kernel takes
+the categorical slot, so the model keeps the interpretable latent embedding \emph{and} gains
+the offset channel. Notably, its level random effects are correlated through latent distance
+--- similar levels share offsets --- which even the Categorical GP cannot express (its offsets
+are exchangeable).
+
+\section{The botorch reference implementation}
+
+\texttt{botorch v0.14.0}, \texttt{models/gp\_regression\_mixed.py} (L109--152) builds, for
+continuous dims $x$ and categorical dims $c$:
+\begin{align}
+K_{\mathrm{sum}} &= \sigma_s^2\Big(k_{\mathrm{RBF}}^{(1)}(x,x') \;+\;
+      \sigma_c^2\, k_{\mathrm{cat}}^{(1)}(c,c')\Big) \tag{L124--138}\\
+K_{\mathrm{prod}} &= \sigma_p^2\; k_{\mathrm{RBF}}^{(2)}(x,x')\cdot
+      k_{\mathrm{cat}}^{(2)}(c,c') \tag{L139--151}\\
+K &= K_{\mathrm{sum}} + K_{\mathrm{prod}} \qquad\text{(no global scale)} \tag{L152}
+\end{align}
+with the following exact ingredients:
+\begin{itemize}
+\item \textbf{Independent instances} for the sum and product terms (class docstring L41--43:
+``we fit different lengthscales for the kernels in the sum and product terms'').
+\item \textbf{Continuous kernels}: ARD RBF from
+\texttt{get\_covar\_module\_with\_dim\_scaled\_prior}\\
+(\texttt{models/utils/gpytorch\_modules.py} L100--133): lengthscale prior
+$\ell_i \sim \mathrm{LogNormal}\!\big(\sqrt2 + \tfrac12\ln d,\ \sqrt3\big)$
+(the Hvarfner-2024 dimension-scaled prior, assuming unit-cube inputs), hard floor
+$\ell_i \ge 0.025$ via \texttt{GreaterThan(0.025, transform=None,
+initial\_value=prior.mode)}.
+\item \textbf{Categorical kernels}: $k_{\mathrm{cat}}(c,c') = \exp(-d_H(c,c')/\ell_c)$ with
+Hamming distance $d_H$, per-dim $\ell_c \ge 10^{-6}$, \emph{no prior}
+(\texttt{models/kernels/categorical.py}).
+\item \textbf{Scales}: the inner categorical term of the sum part carries its own
+\texttt{ScaleKernel} (L130); both parts carry outer \texttt{ScaleKernel}s; none carry priors.
+\item Mean: \texttt{ConstantMean}; outcome standardized (\texttt{Standardize}); known
+observation noise via \texttt{train\_Yvar}.
+\end{itemize}
+
+\subsection*{The Categorical GP's kernel, precisely}
+The kernel the study's Categorical GP uses in the categorical slots is botorch's
+\texttt{CategoricalKernel} (\texttt{models/kernels/categorical.py}):
+\begin{equation}
+k_{\mathrm{cat}}(c, c') \;=\; \exp\!\Big(-\,\frac{d_H(c,c')}{\ell_c}\Big),
+\qquad d_H(c,c') = \mathbb 1[c \neq c']
+\label{eq:hamming}
+\end{equation}
+(averaged over categorical dims when there are several; here there is one). Two properties
+matter: (i) it is \emph{exchangeable} --- $d_H$ gives every pair of distinct levels the same
+distance, so one lengthscale $\ell_c$ sets a single common between-level correlation
+$e^{-1/\ell_c}$; (ii) it is of the form $\exp(-d(\cdot,\cdot))$ for a valid metric $d$, which
+is what makes it positive semi-definite.
+
+\section{The adaptation: latent kernel in the categorical slot}
+
+The LVGP embeds level $\ell$ as $\mathbf z_\ell \in \mathbb R^2$ (lvgp-bayes
+\texttt{LVMapping}) and evaluates all kernels on the embedded input
+$u = [\mathbf z,\, x]$. The mixed-kernel LVGP (\texttt{LVGPRMixed}) is
+\begin{align}
+K\big((x,\ell),(x',\ell')\big) \;=\;
+  &\ \sigma_s^2\Big( k_{\mathrm{RBF}}^{(1)}(x,x')
+   \;+\; \sigma_z^2\, e^{-\|\mathbf z_\ell-\mathbf z_{\ell'}\|^2 / (2\ell_z^2)} \Big) \notag\\
+ +&\ \sigma_p^2\;\, k_{\mathrm{RBF}}^{(2)}(x,x')\;
+   e^{-\|\mathbf z_\ell-\mathbf z_{\ell'}\|^2 / 2}
+\label{eq:mixedlvgp}
+\end{align}
+i.e.\ botorch's exact algebra with each \texttt{CategoricalKernel} replaced by an RBF over the
+shared latent embedding:
+\begin{center}
+\small
+\begin{tabular}{p{0.24\linewidth}p{0.34\linewidth}p{0.34\linewidth}}
+\toprule
+botorch construct & this adaptation & rationale \\
+\midrule
+$k_{\mathrm{cat}}^{(2)}$ (product slot) & RBF over $\mathbf z$, $\ell \equiv 1$ fixed &
+LVGP gauge: the latent scale lives in $\mathbf z$ itself (identical to \texttt{LVGPR}'s
+\texttt{qual\_kernel}) \\[3pt]
+$k_{\mathrm{cat}}^{(1)}$ (sum slot, own $\ell$) & RBF over $\mathbf z$, own learnable
+$\ell_z$ & botorch fits independent categorical lengthscales per term \\[3pt]
+$k_{\mathrm{RBF}}^{(1)}, k_{\mathrm{RBF}}^{(2)}$ & two independent ARD RBFs over $x$,
+Hvarfner prior, floor $0.025$ & copied verbatim (unit-cube inputs guaranteed by the wrapper,
+so the prior's assumptions hold) \\[3pt]
+inner scale on $k_{\mathrm{cat}}^{(1)}$ (L130) & inner \texttt{ScaleKernel} on the sum-part
+latent kernel & structural copy \\[3pt]
+$K_{\mathrm{sum}}+K_{\mathrm{prod}}$, no global scale & \texttt{covar\_module} replaced
+wholesale after \texttt{GPR.\_\_init\_\_} & GPR's default global \texttt{ScaleKernel}
+discarded to match botorch \\
+\bottomrule
+\end{tabular}
+\end{center}
+\subsection*{Where the latent-slot RBF comes from, and the role of its lengthscales}
+
+\textbf{Provenance of the RBF structure.} The RBF-over-latents is not our invention --- it is
+the original LVGP correlation of Zhang et al.\ (2019). There, the level $\ell$ is mapped to
+coordinates $\mathbf z_\ell \in \mathbb R^2$ and the \emph{same Gaussian correlation used for
+continuous inputs} is applied to those coordinates:
+\begin{equation}
+r\big((x,\ell),(x',\ell')\big) \;=\;
+\exp\!\Big(-\textstyle\sum_i \theta_i (x_i - x_i')^2 \;-\; \|\mathbf z_\ell -
+\mathbf z_{\ell'}\|^2\Big),
+\label{eq:zhang}
+\end{equation}
+i.e.\ a product of an ARD Gaussian kernel on $x$ and a \emph{unit-lengthscale} Gaussian (RBF)
+kernel on $\mathbf z$. lvgp-bayes implements exactly this: its \texttt{qual\_kernel} is an
+\texttt{RBFKernel} over the embedded latent columns with lengthscale initialized to $1.0$ and
+gradient frozen (\texttt{models/lvgp.py} L187--192). Validity is inherited from the RBF being
+a kernel on $\mathbb R^{d_z}$: any finite set of level embeddings yields a PSD level
+covariance.
+
+\textbf{The two kernels are the same family with different metrics.} Comparing
+Eq.~\ref{eq:hamming} and the latent factor of Eq.~\ref{eq:zhang}: both are
+$\exp(-d(\ell,\ell')^{p}/\ell_{\mathrm{scale}})$ decays; the Categorical GP uses the
+\emph{fixed, exchangeable} Hamming metric (all distinct pairs equidistant), while the LVGP
+uses a \emph{learned Euclidean} metric $d(\ell,\ell') = \|\mathbf z_\ell - \mathbf z_{\ell'}\|$.
+The Hamming kernel is recovered as the special case in which all latents sit at the vertices
+of a regular simplex --- so replacing $k_{\mathrm{cat}}$ by the latent RBF in botorch's
+algebra is a strict generalization, not a substitution of an unrelated object.
+
+\textbf{Why the product-slot lengthscale is fixed at 1 (gauge).} In the latent RBF a
+lengthscale is redundant with the scale of the embedding itself: the map $\mathbf z \mapsto
+c\,\mathbf z$, $\ell_z \mapsto c\,\ell_z$ leaves the kernel invariant, so ($\mathbf z$,
+$\ell_z$) are not jointly identifiable. Zhang et al.\ and lvgp-bayes resolve this by fixing
+$\ell_z \equiv 1$ and letting the latent coordinates carry the scale --- a gauge choice, not a
+modeling restriction. The mixed kernel keeps this gauge in the \emph{product} slot, so
+$\mathbf z$ is identified exactly as in the original LVGP (latent maps remain comparable
+across models).
+
+\textbf{Why the sum-slot lengthscale is learnable.} botorch's docstring (L41--43) requires
+\emph{independent} categorical lengthscales for the sum and product terms --- that freedom is
+what lets the additive (offset) channel and the multiplicative (shape) channel decay at
+different rates across levels. With a \emph{shared} $\mathbf z$ this freedom cannot be
+absorbed into the embedding (the product slot already fixes $\mathbf z$'s scale), so the sum
+slot must carry its own distance scale $\ell_z$: in Eq.~\ref{eq:mixedlvgp} the offset channel
+correlates levels as $\exp(-\|\Delta\mathbf z\|^2/(2\ell_z^2))$. Interpretation: $\ell_z$
+measures how much broader offset-sharing is than shape-sharing, in latent-distance units
+(fitted example, camel $n{=}25$: $\ell_z \approx 1.7$ --- offsets shared across level
+clusters whose shapes are already nearly independent).
+
+Everything else is inherited unchanged: the latent mapping and its priors
+($\mathrm{raw\ latents} \sim \mathcal N(0,\sqrt{L})$, precision $\sim$ ExpGamma), constant
+mean with $\mathcal N(0,1)$ prior, internal $y$-standardization ($=$ botorch
+\texttt{Standardize}), and the study wrapper's \texttt{FixedNoiseGaussianLikelihood} carrying
+the replicate variances ($=$ botorch \texttt{train\_Yvar}), plus the MATLAB-parity pooled
+aleatoric polynomial over $[x, \mathbf z]$ for noise-surface recovery.
+
+\subsection*{The new kernel vs.\ the original LVGP kernel}
+
+Writing both models with their scales makes the relationship exact. The \textbf{original
+LVGP} (Zhang et al.\ 2019; \texttt{LVGPR}) is a \emph{single fully-multiplicative} channel,
+\begin{equation}
+K_{\mathrm{LVGP}} \;=\; \sigma^2\,
+\underbrace{e^{-\sum_j \phi_j (x_j-x_j')^2}}_{\text{shape in } x}\;
+\underbrace{e^{-\|\mathbf z_\ell - \mathbf z_{\ell'}\|^2}}_{\text{level similarity}},
+\label{eq:lvgporig}
+\end{equation}
+while the \textbf{mixed kernel} (Eq.~\ref{eq:mixedlvgp}) is a sum of three channels,
+$$
+K_{\mathrm{mix}} = \underbrace{\sigma_s^2\, k^{(1)}_{\mathrm{RBF}}(x,x')}_{\text{(a) shared
+trend}} \;+\; \underbrace{\sigma_s^2\sigma_z^2\,
+e^{-\|\Delta\mathbf z\|^2/(2\ell_z^2)}}_{\text{(b) level offsets}} \;+\;
+\underbrace{\sigma_p^2\, k^{(2)}_{\mathrm{RBF}}(x,x')\,
+e^{-\|\Delta\mathbf z\|^2/2}}_{\text{(c) = the original LVGP kernel}}.
+$$
+\paragraph{Why and how channels (a) and (b) were added.} They were not designed
+separately --- both fall out of botorch's single \emph{sum part} when it is distributed:
+$$
+K_{\mathrm{sum}} \;=\; \sigma_s^2\big(\,k^{(1)}_{\mathrm{RBF}}(x,x') +
+\sigma_z^2\,k_{\mathrm{lat}}(\mathbf z_\ell, \mathbf z_{\ell'})\big)
+\;=\; \underbrace{\sigma_s^2\, k^{(1)}_{\mathrm{RBF}}}_{\text{(a)}} \;+\;
+\underbrace{\sigma_s^2\sigma_z^2\, k_{\mathrm{lat}}}_{\text{(b)}} .
+$$
+The statistical reading uses the additivity property of GPs: a sum of kernels is the covariance
+of a sum of \emph{independent} functions, $f \sim \mathcal{GP}(0, K_a + K_b + K_c)
+\iff f = f_a + f_b + f_c$. Hence:
+\begin{itemize}
+\item \textbf{Channel (a) --- why:} a kernel that depends on $x$ only generates a component
+$f_a(x)$ that is \emph{identical for every level} --- the common backbone all categories ride
+on. The study's problems (and most physical systems with a categorical design choice) share
+most of their response across levels; in the original LVGP even this shared part must survive
+the latent decay $e^{-\|\Delta\mathbf z\|^2}$, i.e.\ it is re-learned per level once latents
+separate. \textbf{How:} an ARD RBF restricted (\texttt{active\_dims}) to the continuous
+columns of the embedded input, with its own lengthscales, so the shared backbone may be
+smoother or rougher than the level-specific shape in channel (c).
+\item \textbf{Channel (b) --- why:} a kernel that depends on $\ell$ only generates a component
+$f_b(\ell)$ that is \emph{constant in $x$} --- exactly a per-level offset, the random-effects
+analogue of a per-level mean. This is the surgical answer to the offset tax diagnosed on
+griewank (adding the $b(\ell)$ shifts flipped every budget to the Categorical GP): offsets now
+have a dedicated route into the model that costs correlation nothing elsewhere. \textbf{How:}
+the latent-slot RBF evaluated on the \emph{same} embedding $\mathbf z$ used by channel (c) ---
+no new level parameters at all --- with its own distance scale $\ell_z$ and the inner
+outputscale $\sigma_z^2$ (botorch L130) setting the offset-to-trend variance ratio; the outer
+$\sigma_s^2$ then weighs the whole additive block against the interaction channel (c). Because
+the metric is latent rather than Hamming, these offsets are \emph{correlated between similar
+levels} --- the one capability here that even the Categorical GP lacks.
+\end{itemize}
+
+The differences, one by one:
+\begin{enumerate}
+\item \textbf{The original kernel survives intact as channel (c)} --- same product form, same
+unit-lengthscale latent factor, its own ARD lengthscales. The original LVGP is exactly the
+special case $\sigma_s^2 = 0$: the new model \emph{nests} the old one, so it can never be
+structurally worse, only harder to estimate ($q{+}4$ extra hyperparameters: one extra ARD set,
+$\ell_z$, and the scale split).
+\item \textbf{All-or-nothing coupling vs.\ a functional decomposition.} Under
+Eq.~\ref{eq:lvgporig}, \emph{every} property of $f$ decays with the same factor
+$e^{-\|\Delta\mathbf z\|^2}$: if two levels sit far apart in latent space they share
+\emph{nothing} --- not a global trend, not a mean shift. The mixed kernel corresponds to
+$f(x,\ell) = g(x) + h(\ell) + \mathrm{int}(x,\ell)$: channel (a) is shared by \emph{all}
+levels unconditionally (even latent-infinitely-separated ones), channel (b) carries mean
+shifts, channel (c) carries level-specific shape. This is precisely why the original pays the
+``offset tax'': a pure mean shift can only enter Eq.~\ref{eq:lvgporig} by growing
+$\|\Delta\mathbf z\|$, which simultaneously destroys shape-sharing.
+\item \textbf{Two latent decay rates instead of one.} The original has a single latent factor;
+the mixed kernel evaluates the \emph{same} embedding at two rates ---
+$e^{-\|\Delta\mathbf z\|^2/2\ell_z^2}$ for offsets, $e^{-\|\Delta\mathbf z\|^2/2}$ for shapes
+--- so offset-sharing can extend across level clusters whose shapes are already independent
+(fitted camel example: $\ell_z\!\approx\!1.7$).
+\item \textbf{Independent ARD lengthscales per channel.} The original fits one set of
+$\phi_j$; the mixed kernel fits $k^{(1)}_{\mathrm{RBF}}$ and $k^{(2)}_{\mathrm{RBF}}$
+separately (botorch docstring L41--43), so the shared trend may be smoother or rougher than
+the level-specific shape component.
+\item \textbf{Consequence for the latent map.} In the original, latent distances conflate
+offset- and shape-differences; in the mixed kernel offsets are routed through channel (b), so
+latent distances measure shape similarity more purely --- expect tighter, more interpretable
+level clusters when comparing latent plots across the two models.
+\end{enumerate}
+
+\section{Documented deviations from botorch, and why they are necessary}
+
+\subsection{Every new parameter carries a prior}
+lvgp-bayes's multistart (\texttt{GPR.reset\_parameters},
+\texttt{models/gpregression.py} L143--149) \emph{samples restart initializations from the
+registered priors}; a prior-less parameter is silently never restarted, and MAP has no
+regularization on it. botorch leaves its \texttt{ScaleKernel} outputscales and categorical
+lengthscales prior-less because its own fitter does not need priors. We therefore add, using
+the package's own conventions:
+\begin{itemize}
+\item $\mathrm{raw\_outputscale} \sim \mathcal N(0,1)$ on all three \texttt{ScaleKernel}s
+(the prior \texttt{GPR} itself uses, L99--101);
+\item $\mathrm{raw\_lengthscale} \sim \mathrm{MollifiedUniform}(\ln 0.1, \ln 10)$ on the
+sum-part latent lengthscale $\ell_z$ (the prior lvgp-bayes puts on every learnable
+lengthscale, \texttt{models/lvgp.py} L208--210).
+\end{itemize}
+
+\subsection{Reparameterization of the Hvarfner lengthscale constraint}
+botorch declares \texttt{GreaterThan(0.025, transform=None)} --- the raw parameter \emph{is}
+the lengthscale --- because botorch's fitter enforces constraint bounds inside the optimizer.
+lvgp-bayes's \texttt{fit\_model\_scipy} optimizes raw parameters \textbf{unbounded}
+(\texttt{optim/mll\_scipy.py}: \texttt{bounds=None}). Verified failure mode: L-BFGS walks the
+raw lengthscale negative and the LogNormal prior's support check raises \texttt{ValueError},
+killing every restart silently (the model is then returned at its initial values). Fix: the
+\emph{identical induced model} --- same prior on the lengthscale value, same hard floor ---
+reparameterized per the package convention as
+$$\ell = 0.025 + e^{\mathrm{raw}},\qquad \mathrm{raw}\ \text{unconstrained.}$$
+Residual edge case, discovered in the 30-seed campaign: a prior draw below $0.025$ during a
+restart makes gpytorch's bounds check raise, and \texttt{fit\_model\_scipy} calls
+\texttt{reset\_parameters} \emph{outside} its per-restart exception handler, so one bad draw
+($P \approx 0.2\%$) kills the entire fit (observed once in 210 cells).
+\texttt{LVGPRMixed.reset\_parameters} therefore overrides the sampler to clamp such draws
+just above the floor.
+
+\section{Considerations and caveats}
+
+\begin{itemize}
+\item \textbf{Identifiability / over-parameterization.} The sum of two scaled parts plus the
+latent's own scale freedom is redundant in ways MAP priors must arbitrate (botorch has the
+same redundancy plus \texttt{Standardize}). In practice restarts converge to consistent optima
+(e.g.\ camel $n{=}25$: two of three restarts at the same posterior value).
+\item \textbf{Conditioning.} The additive structure can bring the kernel matrix closer to
+singular; gpytorch occasionally adds jitter up to $10^{-3}$ during fitting (observed on
+friedman $n{=}80$). Fits succeeded; monitor if reused at larger $n$.
+\item \textbf{Gauge.} Fixing the \emph{product}-part latent lengthscale at 1 preserves the
+original LVGP's identification of $\mathbf z$; the sum part's $\ell_z$ then measures how much
+\emph{longer-range} the offset-sharing is than the shape-sharing. Fitted example (camel
+$n{=}25$): $\ell_z = 1.66$ --- offsets shared more broadly across the latent space than
+shapes, exactly the intended division of labor.
+\item \textbf{HMC path unsupported.} \texttt{LVGPR.to\_pyro\_random\_module} assumes the
+covariance tree is \texttt{ScaleKernel(Product(...))}; the MAP path used by the study does not
+touch it.
+\item \textbf{Interpretation of the latent map.} $\mathbf z$ is still a 2-D level embedding,
+but distances now encode shape-similarity (product channel) with offset-similarity carried
+separately (sum channel) --- when comparing latent plots against the plain LVGP, expect
+tighter clusters, since offsets no longer inflate latent distances.
+\end{itemize}
+
+\section{Files changed}
+
+\begin{itemize}
+\item \texttt{utils/models/lvgp\_torch\_mixed.py} \textbf{(new)} --- \texttt{LVGPRMixed}
+(kernel composition of Eq.~\ref{eq:mixedlvgp}, subclassing the vendored \texttt{LVGPR};
+vendored package untouched) and \texttt{HeterLVGPTorchMixed} (study wrapper: fixed replicate
+noise + MATLAB-parity aleatoric, inherited).
+\item \texttt{utils/models/lvgp\_torch.py} --- one-line hook: \texttt{\_LVGPTorchBase} gained
+\texttt{MODEL\_CLS = LVGPR} so subclasses can substitute the GP class; the fit path now
+constructs \texttt{cls.MODEL\_CLS}.
+\item \texttt{utils/models/\_\_init\_\_.py} --- registry entry
+\texttt{heter\_lvgp\_torch\_mixed} (aux).
+\item \texttt{results\_v2/aggregate\_seeds.py}, \texttt{scripts/export\_seed\_latex.py} ---
+the new model added to the 30-seed aggregation and both seed-table variants as
+``H-LVGP (torch-mix)''.
+\end{itemize}
+
+\section{Results (30 seeds, fixed design, latex\_v2 scope)}
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{30-seed replication (fixed design, fresh noise per seed), latex\_v2 scope: mean $\pm$ std over seeds. Bold = best of the four models shown (MAE/IS lower; coverage closest to 0.95).}
+\begin{tabular}{llrrr}
+\toprule
+Config & Model & MAE $\pm$ std & IS & Coverage \\
+\midrule
+Branin $n{=}25$ & Categorical GP & $4.529 \pm 0.241$ & $38.87$ & \textbf{$0.946$} \\
+ & H-LVGP & $2.520 \pm 0.723$ & $37.28$ & $0.996$ \\
+ & H-LVGP (torch) & $3.752 \pm 0.611$ & $24.61$ & $0.960$ \\
+ & H-LVGP (torch-mix) & \textbf{$2.427 \pm 0.510$} & \textbf{$18.89$} & $0.995$ \\
+\midrule
+Branin $n{=}40$ & Categorical GP & $1.585 \pm 0.268$ & $14.86$ & $0.996$ \\
+ & H-LVGP & $1.722 \pm 0.425$ & $35.61$ & $0.998$ \\
+ & H-LVGP (torch) & $1.409 \pm 0.195$ & $14.04$ & \textbf{$0.976$} \\
+ & H-LVGP (torch-mix) & \textbf{$1.183 \pm 0.191$} & \textbf{$11.32$} & $0.987$ \\
+\midrule
+Camel $n{=}25$ & Categorical GP & \textbf{$0.168 \pm 0.009$} & $1.78$ & $0.923$ \\
+ & H-LVGP & $0.178 \pm 0.012$ & $2.15$ & $0.905$ \\
+ & H-LVGP (torch) & $0.231 \pm 0.019$ & $2.21$ & $0.917$ \\
+ & H-LVGP (torch-mix) & $0.196 \pm 0.017$ & \textbf{$1.58$} & \textbf{$0.942$} \\
+\midrule
+Camel $n{=}40$ & Categorical GP & \textbf{$0.114 \pm 0.010$} & $1.13$ & $0.918$ \\
+ & H-LVGP & $0.143 \pm 0.024$ & $1.15$ & \textbf{$0.953$} \\
+ & H-LVGP (torch) & $0.174 \pm 0.017$ & $1.45$ & $0.915$ \\
+ & H-LVGP (torch-mix) & $0.145 \pm 0.019$ & \textbf{$1.11$} & $0.928$ \\
+\midrule
+Friedman 5-D $n{=}40$ & Categorical GP & $0.883 \pm 0.011$ & $7.82$ & \textbf{$0.873$} \\
+ & H-LVGP & $1.242 \pm 0.183$ & $14.92$ & $0.712$ \\
+ & H-LVGP (torch) & $1.239 \pm 0.175$ & $14.19$ & $0.727$ \\
+ & H-LVGP (torch-mix) & \textbf{$0.662 \pm 0.026$} & \textbf{$5.38$} & $0.864$ \\
+\midrule
+Friedman 5-D $n{=}60$ & Categorical GP & $0.483 \pm 0.028$ & $3.29$ & $0.963$ \\
+ & H-LVGP & $0.552 \pm 0.131$ & $3.53$ & $0.910$ \\
+ & H-LVGP (torch) & $0.504 \pm 0.028$ & $3.47$ & $0.897$ \\
+ & H-LVGP (torch-mix) & \textbf{$0.377 \pm 0.026$} & \textbf{$2.28$} & \textbf{$0.946$} \\
+\midrule
+Friedman 5-D $n{=}80$ & Categorical GP & $0.317 \pm 0.009$ & $2.15$ & $0.962$ \\
+ & H-LVGP & $0.345 \pm 0.021$ & $2.02$ & $0.973$ \\
+ & H-LVGP (torch) & $0.364 \pm 0.014$ & $2.35$ & $0.900$ \\
+ & H-LVGP (torch-mix) & \textbf{$0.237 \pm 0.009$} & \textbf{$1.53$} & \textbf{$0.958$} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Across 30 noise realizations the mixed-kernel model takes the \textbf{best MAE in 5 of 7
+configurations} (both Branin budgets --- including $n{=}25$, where it beats the MATLAB
+H-LVGP's flagship result --- and all three Friedman budgets, by 22--25\% over the Categorical
+GP) and the \textbf{best interval score in all 7}. The Categorical GP retains camel's MAE.
+Coverage sits between 0.86 and 0.99 everywhere. The friedman result is the notable one: the
+first configuration family where a latent-variable model beats the Categorical GP
+\emph{decisively and replicably} at every budget --- evidence that once the offset channel is
+provided, the latent geometry is an asset rather than a tax, exactly the mechanism the
+study's griewank/camel arcs identified.
+
+
+\end{document}

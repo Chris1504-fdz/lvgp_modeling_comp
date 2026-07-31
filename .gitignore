@@ -1,14 +1,10 @@
-# --- personal working notes (never pushed) ---
+
 notes/
 
-# --- regenerable artifacts ---
 doe_cache/
 plots/
-# single-seed exploration caches/outputs (regenerable; superseded by results_v2 for sharing)
 results/
-# working latex (full report w/ commentary); the shared version lives in results_v2/latex
-latex/
-# internal working README (not for the public repo)
+
 README.md
 utils/models/__pycache__/
 __pycache__/
@@ -16,7 +12,6 @@ __pycache__/
 .ipynb_checkpoints/
 temp/
 
-# --- latex build products (if a report is added later) ---
 *.aux
 *.log
 *.out

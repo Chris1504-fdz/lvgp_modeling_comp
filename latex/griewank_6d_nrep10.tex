@@ -1,0 +1,33 @@
+\begin{table}[htbp]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\setlength{\fboxsep}{1pt}
+\caption{Griewank 6-D --- per-level metrics, $n_{\mathrm{rep}}=10$ (seed 1; MAE/RRMSE/IS lower is better, coverage target $0.95$). Bold = best model in the row; the green highlight marks the winners of the \emph{Mean} row.}
+\label{tab:griewank_6d_nrep10}
+\begin{tabular}{llrrrrrrrrrrrrrrrr}
+\toprule
+ & & \multicolumn{4}{c}{\textbf{Separate GPs}} & \multicolumn{4}{c}{\textbf{Categorical GP}} & \multicolumn{4}{c}{\textbf{Standard LVGP}} & \multicolumn{4}{c}{\textbf{H-LVGP}} \\
+\cmidrule(lr){3-6} \cmidrule(lr){7-10} \cmidrule(lr){11-14} \cmidrule(lr){15-18}
+$n$ & Level & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.95$ & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.95$ & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.95$ & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.95$ \\
+\midrule
+\multirow{5}{*}{80} & x6 = 0.5 & $0.1124$ & $1.039$ & $1.094$ & {\boldmath$0.8887$} & {\boldmath$0.0812$} & {\boldmath$0.7925$} & {\boldmath$1.017$} & $0.8350$ & $0.1689$ & $1.487$ & $2.812$ & $0.6250$ & $0.1195$ & $0.9957$ & $1.528$ & $0.6904$ \\
+ & x6 = 1.3 & $0.0844$ & $0.8664$ & $0.8943$ & $0.8369$ & {\boldmath$0.0712$} & {\boldmath$0.7962$} & {\boldmath$0.8518$} & {\boldmath$0.8623$} & $0.1409$ & $1.420$ & $2.162$ & $0.6787$ & $0.0939$ & $0.9630$ & $1.303$ & $0.7451$ \\
+ & x6 = 2.7 & {\boldmath$0.0423$} & $0.9214$ & $0.5231$ & $0.8672$ & $0.0434$ & {\boldmath$0.8983$} & {\boldmath$0.4172$} & {\boldmath$0.9541$} & $0.0811$ & $1.481$ & $0.7551$ & $0.8555$ & $0.0542$ & $1.033$ & $0.4656$ & $0.9316$ \\
+ & x6 = 3.1 & $0.0478$ & $1.326$ & $0.4536$ & $0.8623$ & {\boldmath$0.0398$} & $1.326$ & $0.4488$ & {\boldmath$0.9541$} & $0.0852$ & $2.148$ & $0.6717$ & $0.8643$ & $0.0461$ & {\boldmath$1.280$} & {\boldmath$0.3360$} & $0.9678$ \\
+ & \textit{Mean} & $0.0717$ & $1.038$ & $0.7414$ & $0.8638$ & \colorbox{green!20}{\boldmath$0.0589$} & \colorbox{green!20}{\boldmath$0.9533$} & \colorbox{green!20}{\boldmath$0.6838$} & \colorbox{green!20}{\boldmath$0.9014$} & $0.1190$ & $1.634$ & $1.600$ & $0.7559$ & $0.0784$ & $1.068$ & $0.9081$ & $0.8337$ \\
+\midrule
+\multirow{5}{*}{120} & x6 = 0.5 & $0.1149$ & $1.039$ & $1.405$ & $0.8096$ & {\boldmath$0.0723$} & {\boldmath$0.6761$} & {\boldmath$0.8521$} & {\boldmath$0.8525$} & $0.1157$ & $0.9518$ & $1.175$ & $0.7100$ & $0.1506$ & $1.229$ & $1.783$ & $0.7100$ \\
+ & x6 = 1.3 & $0.0656$ & $0.7280$ & $0.6875$ & {\boldmath$0.9229$} & {\boldmath$0.0574$} & {\boldmath$0.6359$} & {\boldmath$0.6661$} & $0.8936$ & $0.0918$ & $0.8605$ & $0.8627$ & $0.7793$ & $0.1186$ & $1.175$ & $1.418$ & $0.7754$ \\
+ & x6 = 2.7 & $0.0354$ & $0.7809$ & $0.3830$ & {\boldmath$0.9580$} & {\boldmath$0.0343$} & {\boldmath$0.6441$} & {\boldmath$0.3109$} & $0.9814$ & $0.0588$ & $1.029$ & $0.3864$ & $0.9150$ & $0.0709$ & $1.299$ & $0.6118$ & $0.9688$ \\
+ & x6 = 3.1 & $0.0355$ & $1.005$ & $0.3884$ & $0.8252$ & {\boldmath$0.0336$} & {\boldmath$0.9784$} & {\boldmath$0.3238$} & $0.9707$ & $0.0636$ & $1.727$ & $0.3583$ & {\boldmath$0.9336$} & $0.0649$ & $1.686$ & $0.5136$ & $0.9912$ \\
+ & \textit{Mean} & $0.0628$ & $0.8884$ & $0.7160$ & $0.8789$ & \colorbox{green!20}{\boldmath$0.0494$} & \colorbox{green!20}{\boldmath$0.7336$} & \colorbox{green!20}{\boldmath$0.5382$} & \colorbox{green!20}{\boldmath$0.9246$} & $0.0825$ & $1.142$ & $0.6957$ & $0.8345$ & $0.1012$ & $1.347$ & $1.082$ & $0.8613$ \\
+\midrule
+\multirow{5}{*}{160} & x6 = 0.5 & $0.0731$ & $0.7128$ & {\boldmath$0.7801$} & {\boldmath$0.9141$} & {\boldmath$0.0673$} & {\boldmath$0.6724$} & $0.9984$ & $0.7832$ & $0.1006$ & $0.8151$ & $0.8253$ & $0.8291$ & $0.1295$ & $1.170$ & $1.190$ & $0.8584$ \\
+ & x6 = 1.3 & $0.0658$ & $0.7193$ & $0.8450$ & $0.8428$ & {\boldmath$0.0573$} & {\boldmath$0.6520$} & $0.7931$ & $0.8398$ & $0.0807$ & $0.7678$ & {\boldmath$0.6693$} & {\boldmath$0.9014$} & $0.1072$ & $1.113$ & $1.069$ & $0.8711$ \\
+ & x6 = 2.7 & $0.0496$ & $0.9630$ & $0.4770$ & $0.8779$ & {\boldmath$0.0328$} & {\boldmath$0.6225$} & {\boldmath$0.2719$} & {\boldmath$0.9551$} & $0.0532$ & $0.9725$ & $0.4788$ & $0.9082$ & $0.0892$ & $1.670$ & $0.6728$ & $0.9600$ \\
+ & x6 = 3.1 & $0.0303$ & $0.9437$ & $0.5085$ & $0.7451$ & {\boldmath$0.0291$} & {\boldmath$0.7932$} & {\boldmath$0.2310$} & $0.9834$ & $0.0457$ & $1.228$ & $0.3392$ & {\boldmath$0.9639$} & $0.0925$ & $2.702$ & $0.7174$ & $0.9932$ \\
+ & \textit{Mean} & $0.0547$ & $0.8347$ & $0.6527$ & $0.8450$ & \colorbox{green!20}{\boldmath$0.0466$} & \colorbox{green!20}{\boldmath$0.6850$} & \colorbox{green!20}{\boldmath$0.5736$} & $0.8904$ & $0.0701$ & $0.9459$ & $0.5782$ & $0.9006$ & $0.1046$ & $1.664$ & $0.9121$ & \colorbox{green!20}{\boldmath$0.9207$} \\
+\bottomrule
+\end{tabular}
+\end{table}

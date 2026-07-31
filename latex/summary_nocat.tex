@@ -1,0 +1,31 @@
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{3.5pt}
+\setlength{\fboxsep}{1.5pt}
+\caption{Mean-over-levels metrics, 1-D problems: problem $\times$ budget $\times$ model (without the Categorical GP) (seed 1). Bold on green = best model in each (problem, budget, $n_{\mathrm{rep}}$) block per metric (MAE/RRMSE/IS: lower; coverage: closest to $0.95$).}
+\label{tab:summary_nocat}
+\begin{tabular}{lllrrrr}
+\toprule
+ & & & \multicolumn{4}{c}{$n_{\mathrm{rep}}=10$} \\
+\cmidrule(lr){4-7}
+Problem & $n$ & Model & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.95$ \\
+\midrule
+\multirow{6}{*}{Branin} & \multirow{3}{*}{25} & Separate GPs & $11.24$ & $0.4550$ & $125.4$ & $0.7340$ \\
+ &  & Standard LVGP & $3.932$ & $0.1763$ & $63.11$ & $0.3710$ \\
+ &  & H-LVGP & \colorbox{green!20}{\boldmath$2.554$} & \colorbox{green!20}{\boldmath$0.0835$} & \colorbox{green!20}{\boldmath$28.91$} & \colorbox{green!20}{\boldmath$1.000$} \\
+\cmidrule(lr){2-7}
+ & \multirow{3}{*}{40} & Separate GPs & $4.295$ & $0.2002$ & $41.91$ & \colorbox{green!20}{\boldmath$0.9360$} \\
+ &  & Standard LVGP & $2.706$ & $0.1087$ & $55.61$ & $0.4250$ \\
+ &  & H-LVGP & \colorbox{green!20}{\boldmath$1.350$} & \colorbox{green!20}{\boldmath$0.0546$} & \colorbox{green!20}{\boldmath$30.60$} & $1.000$ \\
+\midrule
+\multirow{6}{*}{Six-hump camel} & \multirow{3}{*}{25} & Separate GPs & $0.3120$ & $0.3954$ & $2.439$ & $0.9340$ \\
+ &  & Standard LVGP & \colorbox{green!20}{\boldmath$0.1844$} & \colorbox{green!20}{\boldmath$0.2902$} & $4.264$ & $0.4320$ \\
+ &  & H-LVGP & $0.2331$ & $0.3552$ & \colorbox{green!20}{\boldmath$2.178$} & \colorbox{green!20}{\boldmath$0.9350$} \\
+\cmidrule(lr){2-7}
+ & \multirow{3}{*}{40} & Separate GPs & $0.1851$ & $0.2875$ & $1.942$ & \colorbox{green!20}{\boldmath$0.9410$} \\
+ &  & Standard LVGP & $0.1229$ & \colorbox{green!20}{\boldmath$0.1685$} & $3.179$ & $0.3070$ \\
+ &  & H-LVGP & \colorbox{green!20}{\boldmath$0.1197$} & $0.1690$ & \colorbox{green!20}{\boldmath$1.441$} & $1.000$ \\
+\bottomrule
+\end{tabular}
+\end{table}

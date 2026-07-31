@@ -1,0 +1,69 @@
+\begin{table}[htbp]
+\centering
+\small
+%
+\setlength{\tabcolsep}{3pt}
+\caption{30-seed replication, high-dimensional problems (fixed design, fresh noise replicates per seed): mean $\pm$ std over seeds. Bold on green = best mean per (problem, budget) block (coverage: closest to $0.95$).}
+\label{tab:seeds_hd}
+\begin{tabular}{lllrrrr}
+\toprule
+Problem & $n$ & Model & MAE & RRMSE & IS & Coverage \\
+\midrule
+\multirow{30}{*}{Griewank 6-D} & \multirow{6}{*}{48} & Separate GPs & $0.076 \pm 0.003$ & $1.086 \pm 0.036$ & $0.833 \pm 0.034$ & $0.861 \pm 0.014$ \\
+ &  & Categorical GP & \colorbox{green!20}{\boldmath$0.066 \pm 0.003$} & \colorbox{green!20}{\boldmath$0.939 \pm 0.048$} & \colorbox{green!20}{\boldmath$0.695 \pm 0.027$} & \colorbox{green!20}{\boldmath$0.893 \pm 0.015$} \\
+ &  & Standard LVGP & $0.104 \pm 0.009$ & $1.376 \pm 0.134$ & $1.385 \pm 0.193$ & $0.716 \pm 0.052$ \\
+ &  & H-LVGP & $0.097 \pm 0.007$ & $1.242 \pm 0.169$ & $0.939 \pm 0.070$ & $0.845 \pm 0.021$ \\
+ &  & H-LVGP (torch) & $0.093 \pm 0.004$ & $1.145 \pm 0.040$ & $1.249 \pm 0.079$ & $0.707 \pm 0.023$ \\
+ &  & H-LVGP (torch-mix) & $0.082 \pm 0.008$ & $1.103 \pm 0.119$ & $0.869 \pm 0.118$ & $0.814 \pm 0.038$ \\
+\cmidrule(lr){2-7}
+ & \multirow{6}{*}{64} & Separate GPs & $0.066 \pm 0.002$ & $0.973 \pm 0.025$ & $0.773 \pm 0.031$ & $0.882 \pm 0.010$ \\
+ &  & Categorical GP & \colorbox{green!20}{\boldmath$0.064 \pm 0.003$} & \colorbox{green!20}{\boldmath$0.896 \pm 0.041$} & \colorbox{green!20}{\boldmath$0.748 \pm 0.022$} & \colorbox{green!20}{\boldmath$0.912 \pm 0.008$} \\
+ &  & Standard LVGP & $0.086 \pm 0.012$ & $1.210 \pm 0.168$ & $1.203 \pm 0.273$ & $0.736 \pm 0.043$ \\
+ &  & H-LVGP & $0.084 \pm 0.026$ & $1.141 \pm 0.321$ & $0.916 \pm 0.226$ & $0.876 \pm 0.029$ \\
+ &  & H-LVGP (torch) & $0.071 \pm 0.003$ & $1.002 \pm 0.047$ & $0.921 \pm 0.035$ & $0.828 \pm 0.011$ \\
+ &  & H-LVGP (torch-mix) & $0.068 \pm 0.003$ & $0.961 \pm 0.044$ & $0.818 \pm 0.044$ & $0.856 \pm 0.016$ \\
+\cmidrule(lr){2-7}
+ & \multirow{6}{*}{80} & Separate GPs & $0.071 \pm 0.002$ & $1.016 \pm 0.040$ & $0.730 \pm 0.028$ & $0.871 \pm 0.010$ \\
+ &  & Categorical GP & \colorbox{green!20}{\boldmath$0.061 \pm 0.003$} & \colorbox{green!20}{\boldmath$0.986 \pm 0.046$} & \colorbox{green!20}{\boldmath$0.723 \pm 0.024$} & \colorbox{green!20}{\boldmath$0.887 \pm 0.009$} \\
+ &  & Standard LVGP & $0.100 \pm 0.010$ & $1.359 \pm 0.145$ & $1.084 \pm 0.228$ & $0.820 \pm 0.047$ \\
+ &  & H-LVGP & $0.082 \pm 0.015$ & $1.133 \pm 0.277$ & $0.950 \pm 0.089$ & $0.836 \pm 0.047$ \\
+ &  & H-LVGP (torch) & $0.086 \pm 0.004$ & $1.116 \pm 0.059$ & $0.897 \pm 0.045$ & $0.825 \pm 0.024$ \\
+ &  & H-LVGP (torch-mix) & $0.068 \pm 0.004$ & $1.093 \pm 0.057$ & $0.771 \pm 0.055$ & $0.873 \pm 0.023$ \\
+\cmidrule(lr){2-7}
+ & \multirow{6}{*}{120} & Separate GPs & $0.064 \pm 0.003$ & $0.903 \pm 0.036$ & $0.690 \pm 0.063$ & $0.880 \pm 0.017$ \\
+ &  & Categorical GP & \colorbox{green!20}{\boldmath$0.050 \pm 0.001$} & \colorbox{green!20}{\boldmath$0.749 \pm 0.020$} & $0.539 \pm 0.015$ & \colorbox{green!20}{\boldmath$0.922 \pm 0.008$} \\
+ &  & Standard LVGP & $0.101 \pm 0.015$ & $1.382 \pm 0.186$ & $1.283 \pm 0.269$ & $0.773 \pm 0.048$ \\
+ &  & H-LVGP & $0.111 \pm 0.033$ & $1.564 \pm 0.605$ & $1.101 \pm 0.182$ & $0.856 \pm 0.031$ \\
+ &  & H-LVGP (torch) & $0.073 \pm 0.002$ & $0.996 \pm 0.044$ & $0.677 \pm 0.030$ & $0.863 \pm 0.013$ \\
+ &  & H-LVGP (torch-mix) & $0.054 \pm 0.003$ & $0.765 \pm 0.040$ & \colorbox{green!20}{\boldmath$0.535 \pm 0.027$} & $0.921 \pm 0.015$ \\
+\cmidrule(lr){2-7}
+ & \multirow{6}{*}{160} & Separate GPs & $0.056 \pm 0.002$ & $0.851 \pm 0.040$ & $0.683 \pm 0.052$ & $0.836 \pm 0.018$ \\
+ &  & Categorical GP & \colorbox{green!20}{\boldmath$0.047 \pm 0.003$} & \colorbox{green!20}{\boldmath$0.704 \pm 0.053$} & $0.598 \pm 0.024$ & $0.886 \pm 0.011$ \\
+ &  & Standard LVGP & $0.075 \pm 0.008$ & $1.048 \pm 0.107$ & $0.948 \pm 0.391$ & $0.811 \pm 0.100$ \\
+ &  & H-LVGP & $0.137 \pm 0.027$ & $2.091 \pm 0.433$ & $1.047 \pm 0.132$ & \colorbox{green!20}{\boldmath$0.934 \pm 0.020$} \\
+ &  & H-LVGP (torch) & $0.061 \pm 0.002$ & $0.812 \pm 0.029$ & $0.751 \pm 0.044$ & $0.822 \pm 0.018$ \\
+ &  & H-LVGP (torch-mix) & $0.050 \pm 0.003$ & $0.726 \pm 0.051$ & \colorbox{green!20}{\boldmath$0.587 \pm 0.031$} & $0.878 \pm 0.013$ \\
+\midrule
+\multirow{18}{*}{Friedman 5-D} & \multirow{6}{*}{40} & Separate GPs & $2.656 \pm 0.015$ & $0.664 \pm 0.004$ & $23.97 \pm 0.275$ & $0.716 \pm 0.009$ \\
+ &  & Categorical GP & $0.883 \pm 0.011$ & $0.239 \pm 0.003$ & $7.819 \pm 0.256$ & \colorbox{green!20}{\boldmath$0.873 \pm 0.007$} \\
+ &  & Standard LVGP & $1.218 \pm 0.227$ & $0.327 \pm 0.051$ & $15.52 \pm 4.699$ & $0.683 \pm 0.102$ \\
+ &  & H-LVGP & $1.242 \pm 0.183$ & $0.332 \pm 0.042$ & $14.92 \pm 3.072$ & $0.712 \pm 0.067$ \\
+ &  & H-LVGP (torch) & $1.239 \pm 0.175$ & $0.329 \pm 0.039$ & $14.19 \pm 2.913$ & $0.727 \pm 0.063$ \\
+ &  & H-LVGP (torch-mix) & \colorbox{green!20}{\boldmath$0.662 \pm 0.026$} & \colorbox{green!20}{\boldmath$0.177 \pm 0.007$} & \colorbox{green!20}{\boldmath$5.375 \pm 0.374$} & $0.864 \pm 0.013$ \\
+\cmidrule(lr){2-7}
+ & \multirow{6}{*}{60} & Separate GPs & $1.858 \pm 0.047$ & $0.480 \pm 0.011$ & $16.44 \pm 1.483$ & $0.768 \pm 0.022$ \\
+ &  & Categorical GP & $0.483 \pm 0.028$ & $0.135 \pm 0.008$ & $3.286 \pm 0.223$ & $0.963 \pm 0.007$ \\
+ &  & Standard LVGP & $0.505 \pm 0.083$ & $0.138 \pm 0.022$ & $4.128 \pm 0.637$ & $0.799 \pm 0.048$ \\
+ &  & H-LVGP & $0.552 \pm 0.131$ & $0.154 \pm 0.035$ & $3.529 \pm 1.010$ & $0.910 \pm 0.019$ \\
+ &  & H-LVGP (torch) & $0.504 \pm 0.028$ & $0.143 \pm 0.010$ & $3.473 \pm 0.358$ & $0.897 \pm 0.018$ \\
+ &  & H-LVGP (torch-mix) & \colorbox{green!20}{\boldmath$0.377 \pm 0.026$} & \colorbox{green!20}{\boldmath$0.105 \pm 0.008$} & \colorbox{green!20}{\boldmath$2.283 \pm 0.265$} & \colorbox{green!20}{\boldmath$0.946 \pm 0.016$} \\
+\cmidrule(lr){2-7}
+ & \multirow{6}{*}{80} & Separate GPs & $1.274 \pm 0.014$ & $0.345 \pm 0.004$ & $8.091 \pm 0.122$ & $0.919 \pm 0.004$ \\
+ &  & Categorical GP & $0.317 \pm 0.009$ & $0.101 \pm 0.003$ & $2.150 \pm 0.095$ & $0.962 \pm 0.005$ \\
+ &  & Standard LVGP & $0.348 \pm 0.048$ & $0.100 \pm 0.014$ & $2.638 \pm 0.594$ & $0.820 \pm 0.043$ \\
+ &  & H-LVGP & $0.345 \pm 0.021$ & $0.101 \pm 0.006$ & $2.018 \pm 0.123$ & $0.973 \pm 0.013$ \\
+ &  & H-LVGP (torch) & $0.364 \pm 0.014$ & $0.107 \pm 0.003$ & $2.345 \pm 0.173$ & $0.900 \pm 0.017$ \\
+ &  & H-LVGP (torch-mix) & \colorbox{green!20}{\boldmath$0.237 \pm 0.009$} & \colorbox{green!20}{\boldmath$0.074 \pm 0.003$} & \colorbox{green!20}{\boldmath$1.528 \pm 0.102$} & \colorbox{green!20}{\boldmath$0.958 \pm 0.009$} \\
+\bottomrule
+\end{tabular}
+\end{table}

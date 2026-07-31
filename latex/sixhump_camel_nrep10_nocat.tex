@@ -1,0 +1,29 @@
+\begin{table}[htbp]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\setlength{\fboxsep}{1pt}
+\caption{Six-hump camel --- per-level metrics (without the Categorical GP), $n_{\mathrm{rep}}=10$ (seed 1; MAE/RRMSE/IS lower is better, coverage target $0.95$). Bold = best model in the row; the green highlight marks the winners of the \emph{Mean} row.}
+\label{tab:sixhump_camel_nrep10_nocat}
+\begin{tabular}{llrrrrrrrrrrrr}
+\toprule
+ & & \multicolumn{4}{c}{\textbf{Separate GPs}} & \multicolumn{4}{c}{\textbf{Standard LVGP}} & \multicolumn{4}{c}{\textbf{H-LVGP}} \\
+\cmidrule(lr){3-6} \cmidrule(lr){7-10} \cmidrule(lr){11-14}
+$n$ & Level & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.95$ & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.95$ & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.95$ \\
+\midrule
+\multirow{6}{*}{25} & $x_2$ = -1 & $0.1689$ & $0.2501$ & {\boldmath$2.355$} & {\boldmath$0.9500$} & {\boldmath$0.1532$} & {\boldmath$0.2434$} & $3.163$ & $0.5500$ & $0.1713$ & $0.2904$ & $2.601$ & $0.9250$ \\
+ & $x_2$ = -0.85 & $0.2249$ & $0.3515$ & $3.078$ & $0.9600$ & {\boldmath$0.1706$} & {\boldmath$0.2957$} & $4.223$ & $0.6050$ & $0.2511$ & $0.2988$ & {\boldmath$1.745$} & {\boldmath$0.9550$} \\
+ & $x_2$ = 0 & $0.1822$ & $0.4036$ & {\boldmath$1.563$} & $0.9800$ & {\boldmath$0.1337$} & {\boldmath$0.3440$} & $2.544$ & $0.5050$ & $0.1679$ & $0.4539$ & $1.749$ & {\boldmath$0.9450$} \\
+ & $x_2$ = 0.85 & $0.6129$ & $0.6476$ & $3.049$ & {\boldmath$0.9550$} & {\boldmath$0.2916$} & {\boldmath$0.3504$} & $7.908$ & $0.1200$ & $0.3352$ & $0.4118$ & {\boldmath$2.640$} & $0.8900$ \\
+ & $x_2$ = 1 & $0.3711$ & $0.3243$ & {\boldmath$2.151$} & $0.8250$ & {\boldmath$0.1729$} & {\boldmath$0.2178$} & $3.481$ & $0.3800$ & $0.2401$ & $0.3208$ & $2.156$ & {\boldmath$0.9600$} \\
+ & \textit{Mean} & $0.3120$ & $0.3954$ & $2.439$ & $0.9340$ & \colorbox{green!20}{\boldmath$0.1844$} & \colorbox{green!20}{\boldmath$0.2902$} & $4.264$ & $0.4320$ & $0.2331$ & $0.3552$ & \colorbox{green!20}{\boldmath$2.178$} & \colorbox{green!20}{\boldmath$0.9350$} \\
+\midrule
+\multirow{6}{*}{40} & $x_2$ = -1 & $0.1797$ & $0.3163$ & $2.472$ & {\boldmath$0.9350$} & {\boldmath$0.0948$} & {\boldmath$0.1151$} & $2.447$ & $0.3600$ & $0.1187$ & $0.1803$ & {\boldmath$1.245$} & $1.000$ \\
+ & $x_2$ = -0.85 & $0.2187$ & $0.3297$ & $2.297$ & {\boldmath$0.9550$} & $0.2121$ & $0.3042$ & $5.321$ & $0.2750$ & {\boldmath$0.1516$} & {\boldmath$0.2230$} & {\boldmath$1.854$} & $1.000$ \\
+ & $x_2$ = 0 & $0.1888$ & $0.3379$ & $2.033$ & $0.8550$ & {\boldmath$0.0768$} & {\boldmath$0.1458$} & $1.851$ & $0.4000$ & $0.0960$ & $0.1751$ & {\boldmath$0.9064$} & {\boldmath$1.000$} \\
+ & $x_2$ = 0.85 & $0.1662$ & $0.2421$ & {\boldmath$1.571$} & {\boldmath$0.9950$} & $0.1337$ & $0.1614$ & $3.791$ & $0.1900$ & {\boldmath$0.1159$} & {\boldmath$0.1433$} & $1.920$ & $1.000$ \\
+ & $x_2$ = 1 & $0.1719$ & $0.2113$ & $1.338$ & {\boldmath$0.9650$} & {\boldmath$0.0972$} & {\boldmath$0.1160$} & $2.485$ & $0.3100$ & $0.1162$ & $0.1233$ & {\boldmath$1.278$} & $1.000$ \\
+ & \textit{Mean} & $0.1851$ & $0.2875$ & $1.942$ & \colorbox{green!20}{\boldmath$0.9410$} & $0.1229$ & \colorbox{green!20}{\boldmath$0.1685$} & $3.179$ & $0.3070$ & \colorbox{green!20}{\boldmath$0.1197$} & $0.1690$ & \colorbox{green!20}{\boldmath$1.441$} & $1.000$ \\
+\bottomrule
+\end{tabular}
+\end{table}

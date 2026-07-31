@@ -1,0 +1,33 @@
+\begin{table}[htbp]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\setlength{\fboxsep}{1pt}
+\caption{Friedman 5-D (pilot) --- per-level metrics (without the Categorical GP), $n_{\mathrm{rep}}=10$ (seed 1; MAE/RRMSE/IS lower is better, coverage target $0.95$). Bold = best model in the row; the green highlight marks the winners of the \emph{Mean} row.}
+\label{tab:friedman_5d_nrep10_nocat}
+\begin{tabular}{llrrrrrrrrrrrr}
+\toprule
+ & & \multicolumn{4}{c}{\textbf{Separate GPs}} & \multicolumn{4}{c}{\textbf{Standard LVGP}} & \multicolumn{4}{c}{\textbf{H-LVGP}} \\
+\cmidrule(lr){3-6} \cmidrule(lr){7-10} \cmidrule(lr){11-14}
+$n$ & Level & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.95$ & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.95$ & MAE~$\downarrow$ & RRMSE~$\downarrow$ & IS~$\downarrow$ & Cov.~$\to.95$ \\
+\midrule
+\multirow{5}{*}{40} & level 1 & $2.883$ & $0.7168$ & $35.53$ & {\boldmath$0.5400$} & {\boldmath$1.919$} & {\boldmath$0.5056$} & $37.19$ & $0.4258$ & $1.928$ & $0.5072$ & {\boldmath$34.30$} & $0.4678$ \\
+ & level 2 & $3.648$ & $0.9445$ & $25.21$ & {\boldmath$0.7588$} & $1.458$ & $0.4125$ & $19.22$ & $0.5918$ & {\boldmath$1.420$} & {\boldmath$0.4047$} & {\boldmath$16.31$} & $0.6504$ \\
+ & level 3 & $2.100$ & $0.5276$ & $12.06$ & {\boldmath$0.9658$} & $1.061$ & $0.2778$ & $14.27$ & $0.5918$ & {\boldmath$1.007$} & {\boldmath$0.2648$} & {\boldmath$9.959$} & $0.7246$ \\
+ & level 4 & $1.980$ & $0.4667$ & $23.02$ & $0.5967$ & $0.9341$ & $0.2312$ & $8.987$ & $0.6963$ & {\boldmath$0.8655$} & {\boldmath$0.2157$} & {\boldmath$6.081$} & {\boldmath$0.8389$} \\
+ & \textit{Mean} & $2.653$ & $0.6639$ & $23.95$ & \colorbox{green!20}{\boldmath$0.7153$} & $1.343$ & $0.3568$ & $19.92$ & $0.5764$ & \colorbox{green!20}{\boldmath$1.305$} & \colorbox{green!20}{\boldmath$0.3481$} & \colorbox{green!20}{\boldmath$16.66$} & $0.6704$ \\
+\midrule
+\multirow{5}{*}{60} & level 1 & $2.159$ & $0.5576$ & $14.19$ & $0.8428$ & {\boldmath$0.6205$} & {\boldmath$0.1800$} & $5.883$ & $0.7695$ & $0.6499$ & $0.1920$ & {\boldmath$4.671$} & {\boldmath$0.8506$} \\
+ & level 2 & $2.355$ & $0.6243$ & $23.10$ & $0.6875$ & {\boldmath$0.5207$} & {\boldmath$0.1553$} & $4.299$ & $0.8213$ & $0.5457$ & $0.1697$ & {\boldmath$3.986$} & {\boldmath$0.8486$} \\
+ & level 3 & $1.977$ & $0.4900$ & $25.71$ & $0.5654$ & {\boldmath$0.4212$} & {\boldmath$0.1098$} & {\boldmath$2.364$} & $0.8955$ & $0.4548$ & $0.1246$ & $2.402$ & {\boldmath$0.9551$} \\
+ & level 4 & $1.009$ & $0.2630$ & $6.315$ & $0.9209$ & {\boldmath$0.4802$} & {\boldmath$0.1189$} & $2.882$ & $0.8652$ & $0.4990$ & $0.1227$ & {\boldmath$2.457$} & {\boldmath$0.9648$} \\
+ & \textit{Mean} & $1.875$ & $0.4837$ & $17.33$ & $0.7542$ & \colorbox{green!20}{\boldmath$0.5107$} & \colorbox{green!20}{\boldmath$0.1410$} & $3.857$ & $0.8379$ & $0.5373$ & $0.1523$ & \colorbox{green!20}{\boldmath$3.379$} & \colorbox{green!20}{\boldmath$0.9048$} \\
+\midrule
+\multirow{5}{*}{80} & level 1 & $1.456$ & $0.4145$ & $8.637$ & {\boldmath$0.9531$} & $0.4100$ & $0.1139$ & $2.381$ & $0.8740$ & {\boldmath$0.3555$} & {\boldmath$0.1131$} & {\boldmath$2.024$} & $0.9795$ \\
+ & level 2 & $1.656$ & $0.4538$ & $10.23$ & $0.8770$ & $0.3519$ & {\boldmath$0.1006$} & $2.357$ & $0.8340$ & {\boldmath$0.3254$} & $0.1023$ & {\boldmath$1.758$} & {\boldmath$0.9756$} \\
+ & level 3 & $1.157$ & $0.3010$ & $8.100$ & $0.8789$ & $0.3291$ & $0.0890$ & {\boldmath$1.835$} & {\boldmath$0.9023$} & {\boldmath$0.2892$} & {\boldmath$0.0786$} & $1.947$ & $1.000$ \\
+ & level 4 & $0.7897$ & $0.1980$ & $4.970$ & {\boldmath$0.9883$} & $0.4351$ & $0.1130$ & $2.430$ & $0.8662$ & {\boldmath$0.3615$} & {\boldmath$0.0937$} & {\boldmath$2.275$} & $1.000$ \\
+ & \textit{Mean} & $1.265$ & $0.3418$ & $7.985$ & \colorbox{green!20}{\boldmath$0.9243$} & $0.3815$ & $0.1041$ & $2.251$ & $0.8691$ & \colorbox{green!20}{\boldmath$0.3329$} & \colorbox{green!20}{\boldmath$0.0969$} & \colorbox{green!20}{\boldmath$2.001$} & $0.9888$ \\
+\bottomrule
+\end{tabular}
+\end{table}
