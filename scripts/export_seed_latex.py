@@ -33,16 +33,20 @@ def cell(mean, std, win):
     return r"\colorbox{green!20}{\boldmath" + s + "}" if win else s
 
 
-def build(model_order, sfx, grp_sfx, grp_name, grp_probs):
+def build(model_order, sfx, grp_sfx, grp_name, grp_probs, size=r"\small", compact=False):
     df = pd.read_csv(CSV, header=[0, 1], index_col=[0, 1, 2])
     probs = [p for p in grp_probs if p in df.index.get_level_values(0)]
     note = " Without the Categorical GP (winners recomputed)." if sfx else ""
-    lines = [
-        r"\begin{table}[htbp]", r"\centering", r"\small",
-        r"\setlength{\tabcolsep}{3pt}",
+    caption = (r"\caption{30-seed replication: mean $\pm$ std; bold on green = best per block"
+               r" (coverage: closest to 0.95)." + note + "}") if compact else (
         rf"\caption{{30-seed replication, {grp_name} (fixed design, fresh noise replicates "
         r"per seed): mean $\pm$ std over seeds. Bold on green = best mean per (problem, budget) "
-        r"block (coverage: closest to $0.95$)." + note + "}",
+        r"block (coverage: closest to $0.95$)." + note + "}")
+    lines = [
+        r"\begin{table}[htbp]", r"\centering", size,
+        (r"\renewcommand{\arraystretch}{0.85}" if compact else "%"),
+        r"\setlength{\tabcolsep}{3pt}",
+        caption,
         rf"\label{{tab:seeds{grp_sfx}{sfx}}}", r"\begin{tabular}{lllrrrr}", r"\toprule",
         r"Problem & $n$ & Model & MAE & RRMSE & IS & Coverage \\", r"\midrule"]
     for pi, prob in enumerate(probs):
@@ -88,7 +92,8 @@ def main():
             with open(out, "w") as fh:
                 fh.write(tex)
             print("wrote", out)
-        tex = build(model_order, sfx, "", "all problems", V2_PROBS)
+        tex = build(model_order, sfx, "", "all problems", V2_PROBS,
+                    size=r"\footnotesize", compact=True)
         out = os.path.join(HERE, "latex_v2", f"seed_summary{sfx}.tex")
         with open(out, "w") as fh:
             fh.write(tex)
